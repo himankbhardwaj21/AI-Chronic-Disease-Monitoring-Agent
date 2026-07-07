@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% block title %}Patients{% endblock %}
+{% block page_title %}<i class="bi bi-people-fill me-2 text-primary"></i>Patient List{% endblock %}
+{% block page_subtitle %}All registered patient profiles{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <span class="badge bg-primary rounded-pill">{{ patients|length }} Patient{{ 's' if patients|length != 1 }}</span>
+  </div>
+  <a href="{{ url_for('patients.create') }}" class="btn btn-primary">
+    <i class="bi bi-person-plus-fill me-2"></i>Add New Patient
+  </a>
+</div>
+
+{% if patients %}
+<div class="row g-3">
+  {% for p in patients %}
+  <div class="col-12 col-md-6 col-xl-4">
+    <div class="card border-0 shadow-sm h-100 patient-list-card">
+      <div class="card-body p-4">
+        <div class="d-flex align-items-start gap-3 mb-3">
+          <div class="avatar-circle flex-shrink-0">{{ p.name[0] }}</div>
+          <div class="flex-grow-1 min-w-0">
+            <h6 class="fw-bold mb-1 text-truncate">{{ p.name }}</h6>
+            <p class="text-muted small mb-1">{{ p.age }}y &bull; {{ p.gender }} &bull; {{ p.blood_group or 'N/A' }}</p>
+            <span class="badge disease-badge-sm">{{ p.primary_disease }}</span>
+          </div>
+          <div class="dropdown">
+            <button class="btn btn-sm btn-outline-secondary border-0" data-bs-toggle="dropdown">
+              <i class="bi bi-three-dots-vertical"></i>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end shadow">
+              <li><a class="dropdown-item" href="{{ url_for('dashboard.dashboard', patient_id=p.id) }}"><i class="bi bi-grid me-2 text-primary"></i>Dashboard</a></li>
+              <li><a class="dropdown-item" href="{{ url_for('patients.view', patient_id=p.id) }}"><i class="bi bi-person me-2 text-info"></i>View Profile</a></li>
+              <li><a class="dropdown-item" href="{{ url_for('patients.edit', patient_id=p.id) }}"><i class="bi bi-pencil me-2 text-warning"></i>Edit</a></li>
+              <li><a class="dropdown-item" href="{{ url_for('health_data.input_data', patient_id=p.id) }}"><i class="bi bi-activity me-2 text-success"></i>Log Data</a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li>
+                <form method="post" action="{{ url_for('patients.delete', patient_id=p.id) }}" onsubmit="return confirm('Remove {{ p.name }}?')">
+                  <button type="submit" class="dropdown-item text-danger"><i class="bi bi-trash me-2"></i>Remove</button>
+                </form>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="row g-2 mb-3">
+          <div class="col-4 text-center">
+            <div class="mini-stat-value">{{ p.height_cm or '—' }}</div>
+            <div class="mini-stat-label">Height cm</div>
+          </div>
+          <div class="col-4 text-center border-start border-end">
+            <div class="mini-stat-value">{{ p.weight_kg or '—' }}</div>
+            <div class="mini-stat-label">Weight kg</div>
+          </div>
+          <div class="col-4 text-center">
+            <div class="mini-stat-value bmi-value" data-bmi="{{ p.bmi or 0 }}">{{ p.bmi or '—' }}</div>
+            <div class="mini-stat-label">BMI</div>
+          </div>
+        </div>
+
+        {% if p.doctor_name %}
+        <div class="d-flex align-items-center gap-1 text-muted small mb-2">
+          <i class="bi bi-hospital"></i>
+          <span>Dr. {{ p.doctor_name }}</span>
+        </div>
+        {% endif %}
+
+        <div class="d-flex gap-2">
+          <a href="{{ url_for('dashboard.dashboard', patient_id=p.id) }}" class="btn btn-sm btn-primary flex-fill">
+            <i class="bi bi-grid me-1"></i>Dashboard
+          </a>
+          <a href="{{ url_for('health_data.input_data', patient_id=p.id) }}" class="btn btn-sm btn-outline-success flex-fill">
+            <i class="bi bi-plus me-1"></i>Log Data
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="text-center py-5">
+  <i class="bi bi-people fs-1 text-muted d-block mb-3"></i>
+  <h5 class="text-muted">No patients yet</h5>
+  <p class="text-muted">Create your first patient profile to get started.</p>
+  <a href="{{ url_for('patients.create') }}" class="btn btn-primary mt-2">
+    <i class="bi bi-person-plus-fill me-2"></i>Create First Patient
+  </a>
+</div>
+{% endif %}
+{% endblock %}

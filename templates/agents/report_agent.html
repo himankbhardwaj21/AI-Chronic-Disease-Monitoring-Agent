@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% block title %}Medical Report{% endblock %}
+{% block page_title %}<i class="bi bi-file-earmark-medical-fill me-2 text-primary"></i>ReportMD — Medical Report{% endblock %}
+{% block page_subtitle %}{{ patient.name }} &bull; AI-generated {{ report_type }} health report{% endblock %}
+
+{% block content %}
+<!-- Report Type Selector -->
+<div class="d-flex gap-2 mb-4 flex-wrap">
+  {% for rt in ['daily', 'weekly', 'monthly'] %}
+  <a href="{{ url_for('agents.report_agent', patient_id=patient.id) }}?type={{ rt }}"
+     class="btn {% if report_type == rt %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+    <i class="bi bi-calendar{{ '-week' if rt == 'weekly' else '-month' if rt == 'monthly' else '' }} me-1"></i>
+    {{ rt.capitalize() }} Report
+  </a>
+  {% endfor %}
+  <a href="{{ url_for('reports.download_pdf', patient_id=patient.id) }}?type={{ report_type }}"
+     class="btn btn-outline-danger ms-auto">
+    <i class="bi bi-file-earmark-pdf me-1"></i>Download PDF
+  </a>
+</div>
+
+<div class="row g-4">
+  <!-- Report Meta -->
+  <div class="col-12 col-md-4 col-lg-3">
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-body p-4 text-center">
+        <i class="bi bi-file-earmark-medical-fill fs-1 text-primary d-block mb-2"></i>
+        <div class="fw-bold">{{ report_type.capitalize() }} Report</div>
+        <div class="text-muted small">{{ result.generated_at }}</div>
+        <div class="mt-2 badge bg-primary rounded-pill">{{ result.period_records }} records</div>
+        <div class="mt-1 badge bg-{{ 'success' if result.avg_health_score >= 75 else 'warning text-dark' if result.avg_health_score >= 60 else 'danger' }} rounded-pill">
+          Avg Score: {{ result.avg_health_score }}/100
+        </div>
+      </div>
+    </div>
+    <div class="card border-0 shadow-sm">
+      <div class="card-body p-3">
+        <h6 class="fw-semibold mb-3"><i class="bi bi-person me-2 text-primary"></i>Patient</h6>
+        <div class="info-row small"><strong>Name:</strong> {{ patient.name }}</div>
+        <div class="info-row small"><strong>Age:</strong> {{ patient.age }}</div>
+        <div class="info-row small"><strong>Disease:</strong> {{ patient.primary_disease }}</div>
+        <div class="info-row small"><strong>Doctor:</strong> {{ patient.doctor_name or 'N/A' }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI Report Content -->
+  <div class="col-12 col-md-8 col-lg-9">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-transparent border-0 pt-3 px-4 d-flex align-items-center gap-2">
+        <div class="agent-mini-badge bg-primary-subtle rounded-2 p-2"><i class="bi bi-robot text-primary"></i></div>
+        <div>
+          <h6 class="mb-0 fw-semibold">ReportMD — {{ report_type.capitalize() }} Health Report</h6>
+          <small class="text-muted">IBM Granite AI — Medical Report Agent</small>
+        </div>
+      </div>
+      <div class="card-body px-4 pb-4 ai-response-body">
+        {{ result.report_html|safe if result.report_html else '<p class="text-muted">No report data available.</p>' }}
+      </div>
+      <div class="card-footer bg-transparent border-0 px-4 pb-3">
+        <div class="alert alert-warning-subtle border border-warning-subtle rounded-3 py-2 px-3">
+          <small class="text-muted"><i class="bi bi-info-circle me-1"></i>
+            This report is AI-generated for informational purposes. Always review with your healthcare provider.
+          </small>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="mt-4">
+  <a href="{{ url_for('agents.agents_home', patient_id=patient.id) }}" class="btn btn-outline-secondary">
+    <i class="bi bi-arrow-left me-1"></i>All Agents
+  </a>
+  <a href="{{ url_for('reports.reports_home', patient_id=patient.id) }}" class="btn btn-outline-primary ms-2">
+    <i class="bi bi-bar-chart me-1"></i>Full Reports Page
+  </a>
+</div>
+{% endblock %}

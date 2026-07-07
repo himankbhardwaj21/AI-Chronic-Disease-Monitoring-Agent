@@ -1,0 +1,245 @@
+{% extends 'base.html' %}
+{% block title %}Log Health Data{% endblock %}
+{% block page_title %}<i class="bi bi-activity me-2 text-primary"></i>Log Health Data{% endblock %}
+{% block page_subtitle %}{{ patient.name }} &bull; Enter today's health readings{% endblock %}
+
+{% block content %}
+<form method="post" action="{{ url_for('health_data.input_data', patient_id=patient.id) }}" id="healthDataForm" novalidate>
+
+  <div class="row g-4">
+
+    <!-- Vital Signs -->
+    <div class="col-12 col-lg-6">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-transparent border-0 pt-3 px-4">
+          <h6 class="mb-0 fw-semibold"><i class="bi bi-heart-pulse me-2 text-danger"></i>Vital Signs</h6>
+        </div>
+        <div class="card-body px-4 pb-4">
+          <div class="row g-3">
+            <div class="col-12">
+              <label class="form-label fw-medium">Blood Glucose (mg/dL)</label>
+              <div class="input-group">
+                <input type="number" class="form-control" name="blood_glucose" min="20" max="600" step="0.1"
+                       placeholder="e.g. 120">
+                <span class="input-group-text text-muted small">mg/dL</span>
+              </div>
+              <div class="form-text">Normal fasting: 70–100 mg/dL</div>
+            </div>
+            <div class="col-6">
+              <label class="form-label fw-medium">Systolic BP</label>
+              <div class="input-group">
+                <input type="number" class="form-control" name="systolic_bp" min="60" max="300"
+                       placeholder="e.g. 120">
+                <span class="input-group-text text-muted small">mmHg</span>
+              </div>
+            </div>
+            <div class="col-6">
+              <label class="form-label fw-medium">Diastolic BP</label>
+              <div class="input-group">
+                <input type="number" class="form-control" name="diastolic_bp" min="40" max="200"
+                       placeholder="e.g. 80">
+                <span class="input-group-text text-muted small">mmHg</span>
+              </div>
+            </div>
+            <div class="col-6">
+              <label class="form-label fw-medium">Heart Rate</label>
+              <div class="input-group">
+                <input type="number" class="form-control" name="heart_rate" min="20" max="250"
+                       placeholder="e.g. 72">
+                <span class="input-group-text text-muted small">bpm</span>
+              </div>
+            </div>
+            <div class="col-6">
+              <label class="form-label fw-medium">Pulse</label>
+              <div class="input-group">
+                <input type="number" class="form-control" name="pulse" min="20" max="250"
+                       placeholder="e.g. 72">
+                <span class="input-group-text text-muted small">bpm</span>
+              </div>
+            </div>
+            <div class="col-6">
+              <label class="form-label fw-medium">SpO₂ Oxygen</label>
+              <div class="input-group">
+                <input type="number" class="form-control" name="oxygen_saturation" min="50" max="100" step="0.1"
+                       placeholder="e.g. 98">
+                <span class="input-group-text text-muted small">%</span>
+              </div>
+              <div class="form-text">Normal: ≥ 95%</div>
+            </div>
+            <div class="col-6">
+              <label class="form-label fw-medium">Temperature</label>
+              <div class="input-group">
+                <input type="number" class="form-control" name="body_temperature" min="32" max="45" step="0.1"
+                       placeholder="e.g. 36.6">
+                <span class="input-group-text text-muted small">°C</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Body & Lifestyle -->
+    <div class="col-12 col-lg-6">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-transparent border-0 pt-3 px-4">
+          <h6 class="mb-0 fw-semibold"><i class="bi bi-person-fill me-2 text-success"></i>Body & Lifestyle</h6>
+        </div>
+        <div class="card-body px-4 pb-4">
+          <div class="row g-3">
+            <div class="col-6">
+              <label class="form-label fw-medium">Weight (kg)</label>
+              <input type="number" class="form-control" name="weight_kg" min="10" max="500" step="0.1"
+                     placeholder="e.g. 70.5">
+            </div>
+            <div class="col-6">
+              <label class="form-label fw-medium">Sleep Hours</label>
+              <input type="number" class="form-control" name="sleep_hours" min="0" max="24" step="0.5"
+                     placeholder="e.g. 7.5">
+            </div>
+            <div class="col-6">
+              <label class="form-label fw-medium">Water Intake (L)</label>
+              <input type="number" class="form-control" name="water_intake_liters" min="0" max="20" step="0.1"
+                     placeholder="e.g. 2.0">
+            </div>
+            <div class="col-6">
+              <label class="form-label fw-medium">Exercise (min)</label>
+              <input type="number" class="form-control" name="exercise_minutes" min="0" max="300"
+                     placeholder="e.g. 30">
+            </div>
+            <div class="col-6">
+              <label class="form-label fw-medium">Calories Burned</label>
+              <input type="number" class="form-control" name="calories_burned" min="0" max="5000"
+                     placeholder="e.g. 200">
+            </div>
+            <div class="col-6">
+              <label class="form-label fw-medium">Steps Count</label>
+              <input type="number" class="form-control" name="steps_count" min="0" max="50000"
+                     placeholder="e.g. 6000">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Subjective Metrics -->
+    <div class="col-12 col-lg-6">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-transparent border-0 pt-3 px-4">
+          <h6 class="mb-0 fw-semibold"><i class="bi bi-emoji-smile me-2 text-warning"></i>How Are You Feeling?</h6>
+        </div>
+        <div class="card-body px-4 pb-4">
+          <div class="row g-3">
+            <div class="col-12">
+              <label class="form-label fw-medium">Mood</label>
+              <div class="d-flex gap-2 flex-wrap">
+                {% for mood, emoji in [('Great', '😊'), ('Good', '🙂'), ('Fair', '😐'), ('Poor', '😟'), ('Terrible', '😢')] %}
+                <input type="radio" class="btn-check" name="mood" id="mood_{{ mood }}" value="{{ mood }}">
+                <label class="btn btn-outline-secondary mood-btn" for="mood_{{ mood }}">{{ emoji }} {{ mood }}</label>
+                {% endfor %}
+              </div>
+            </div>
+            <div class="col-6">
+              <label class="form-label fw-medium">Stress Level: <span id="stressVal">5</span>/10</label>
+              <input type="range" class="form-range" name="stress_level" min="1" max="10" value="5"
+                     oninput="document.getElementById('stressVal').textContent=this.value">
+            </div>
+            <div class="col-6">
+              <label class="form-label fw-medium">Pain Level: <span id="painVal">0</span>/10</label>
+              <input type="range" class="form-range" name="pain_level" min="0" max="10" value="0"
+                     oninput="document.getElementById('painVal').textContent=this.value">
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-medium">Symptoms Today</label>
+              <div class="row g-2">
+                {% for sym in ['Headache', 'Dizziness', 'Fatigue', 'Chest pain', 'Shortness of breath',
+                               'Nausea', 'Swelling', 'Numbness', 'Blurred vision', 'Increased thirst'] %}
+                <div class="col-6">
+                  <div class="form-check">
+                    <input class="form-check-input symptom-check" type="checkbox" value="{{ sym }}" id="sym_{{ loop.index }}">
+                    <label class="form-check-label small" for="sym_{{ loop.index }}">{{ sym }}</label>
+                  </div>
+                </div>
+                {% endfor %}
+              </div>
+              <input type="hidden" name="symptoms" id="symptomsInput">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Notes -->
+    <div class="col-12 col-lg-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-transparent border-0 pt-3 px-4">
+          <h6 class="mb-0 fw-semibold"><i class="bi bi-journal-text me-2 text-info"></i>Notes & Voice Input</h6>
+        </div>
+        <div class="card-body px-4 pb-4">
+          <label class="form-label fw-medium">Additional Notes</label>
+          <textarea class="form-control mb-2" name="notes" rows="6"
+                    id="notesInput"
+                    placeholder="Any additional observations, how you felt today, what you ate, activities done..."></textarea>
+          <button type="button" class="btn btn-outline-info btn-sm" onclick="startVoiceInput()" id="voiceBtn">
+            <i class="bi bi-mic-fill me-1"></i>Voice Input
+          </button>
+          <div class="alert alert-info alert-sm mt-3 py-2 px-3 rounded-3" role="alert">
+            <small><i class="bi bi-info-circle me-1"></i>
+              After saving, the AI will automatically analyze your readings and generate health alerts if needed.
+            </small>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Submit -->
+    <div class="col-12">
+      <div class="d-flex gap-3 justify-content-end">
+        <a href="{{ url_for('dashboard.dashboard', patient_id=patient.id) }}" class="btn btn-outline-secondary px-4">
+          <i class="bi bi-x me-1"></i>Cancel
+        </a>
+        <button type="submit" class="btn btn-primary btn-lg px-5">
+          <i class="bi bi-check2-circle me-2"></i>Save Health Data &amp; Analyze
+        </button>
+      </div>
+    </div>
+  </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Collect symptom checkboxes into hidden input
+  document.getElementById('healthDataForm').addEventListener('submit', function() {
+    const checked = [...document.querySelectorAll('.symptom-check:checked')].map(el => el.value);
+    document.getElementById('symptomsInput').value = checked.join(', ');
+  });
+
+  // Voice input
+  function startVoiceInput() {
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+      alert('Voice input not supported in this browser. Try Chrome.');
+      return;
+    }
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SR();
+    recognition.lang = 'en-US';
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    const btn = document.getElementById('voiceBtn');
+    btn.innerHTML = '<i class="bi bi-mic-fill me-1 text-danger"></i>Listening...';
+    btn.disabled = true;
+    recognition.start();
+    recognition.onresult = (e) => {
+      const transcript = e.results[0][0].transcript;
+      document.getElementById('notesInput').value += (document.getElementById('notesInput').value ? ' ' : '') + transcript;
+      btn.innerHTML = '<i class="bi bi-mic-fill me-1"></i>Voice Input';
+      btn.disabled = false;
+    };
+    recognition.onerror = () => {
+      btn.innerHTML = '<i class="bi bi-mic-fill me-1"></i>Voice Input';
+      btn.disabled = false;
+    };
+  }
+</script>
+{% endblock %}

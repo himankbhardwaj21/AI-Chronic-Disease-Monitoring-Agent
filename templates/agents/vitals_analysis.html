@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+{% block title %}Vitals Analysis{% endblock %}
+{% block page_title %}<i class="bi bi-heart-pulse-fill me-2 text-danger"></i>VitalGuard — Health Monitoring{% endblock %}
+{% block page_subtitle %}{{ patient.name }} &bull; AI-powered vital signs analysis{% endblock %}
+
+{% block content %}
+{% if result %}
+<div class="row g-4">
+
+  <!-- Health Score & Alerts -->
+  <div class="col-12 col-md-4 col-lg-3">
+    <div class="card border-0 shadow-sm text-center mb-3">
+      <div class="card-body p-4">
+        <i class="bi bi-award-fill fs-1 text-warning d-block mb-2"></i>
+        <h2 class="fw-bold text-primary">{{ result.health_score|int }}</h2>
+        <div class="text-muted">/100 Health Score</div>
+        <div class="progress mt-2" style="height:8px">
+          <div class="progress-bar {% if result.health_score >= 80 %}bg-success{% elif result.health_score >= 60 %}bg-warning{% else %}bg-danger{% endif %}"
+               style="width:{{ result.health_score }}%"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Vital Alerts -->
+    {% if result.alerts %}
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-transparent border-0 pt-3 px-3">
+        <h6 class="mb-0 fw-semibold text-danger"><i class="bi bi-bell-fill me-2"></i>{{ result.alerts|length }} Alert(s)</h6>
+      </div>
+      <div class="card-body p-3">
+        {% for alert in result.alerts %}
+        <div class="alert-compact mb-2 p-2 rounded-3 border border-{{ 'danger' if alert.severity in ['Critical','Emergency'] else 'warning' }}-subtle bg-{{ 'danger' if alert.severity in ['Critical','Emergency'] else 'warning' }}-subtle">
+          <div class="fw-semibold small text-{{ 'danger' if alert.severity in ['Critical','Emergency'] else 'warning' }}">{{ alert.title }}</div>
+          <div class="text-muted" style="font-size:11px">{{ alert.message[:80] }}…</div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% else %}
+    <div class="card border-0 shadow-sm text-center p-3">
+      <i class="bi bi-check-circle-fill text-success fs-3 mb-2"></i>
+      <div class="text-success fw-medium small">All vitals in range</div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- AI Analysis -->
+  <div class="col-12 col-md-8 col-lg-9">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-transparent border-0 pt-3 px-4 d-flex align-items-center gap-2">
+        <div class="agent-mini-badge bg-danger-subtle rounded-2 p-2"><i class="bi bi-robot text-danger"></i></div>
+        <div>
+          <h6 class="mb-0 fw-semibold">VitalGuard Analysis</h6>
+          <small class="text-muted">IBM Granite AI — Health Monitoring Agent</small>
+        </div>
+      </div>
+      <div class="card-body px-4 pb-4 ai-response-body">
+        {{ result.analysis_html|safe }}
+      </div>
+    </div>
+  </div>
+</div>
+{% else %}
+<div class="card border-0 shadow-sm">
+  <div class="card-body text-center py-5">
+    <i class="bi bi-heart-pulse fs-1 text-muted d-block mb-3"></i>
+    <h5 class="text-muted">No Health Data Available</h5>
+    <p class="text-muted">Log your first health reading to get AI vital analysis.</p>
+    <a href="{{ url_for('health_data.input_data', patient_id=patient.id) }}" class="btn btn-primary">
+      <i class="bi bi-plus me-2"></i>Log Health Data
+    </a>
+  </div>
+</div>
+{% endif %}
+
+<div class="d-flex gap-2 mt-4">
+  <a href="{{ url_for('agents.agents_home', patient_id=patient.id) }}" class="btn btn-outline-secondary">
+    <i class="bi bi-arrow-left me-1"></i>All Agents
+  </a>
+  <a href="{{ url_for('agents.risk_prediction', patient_id=patient.id) }}" class="btn btn-warning">
+    <i class="bi bi-shield-exclamation me-1"></i>Risk Prediction
+  </a>
+</div>
+{% endblock %}

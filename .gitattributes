@@ -1,0 +1,52 @@
+# ============================================================
+# ChronicCare AI — .gitattributes
+# Normalize line endings: LF in the repo, platform native on checkout
+# ============================================================
+
+# Default: auto-normalize text files
+* text=auto
+
+# Python source — always LF
+*.py text eol=lf
+
+# Web files — always LF
+*.html text eol=lf
+*.css  text eol=lf
+*.js   text eol=lf
+*.json text eol=lf
+
+# Config files — always LF
+*.yaml text eol=lf
+*.yml  text eol=lf
+*.toml text eol=lf
+*.cfg  text eol=lf
+*.ini  text eol=lf
+*.env* text eol=lf
+
+# Documentation — always LF
+*.md   text eol=lf
+*.txt  text eol=lf
+*.rst  text eol=lf
+
+# Shell scripts — always LF
+*.sh   text eol=lf
+Procfile text eol=lf
+
+# Windows scripts — CRLF
+*.bat  text eol=crlf
+*.cmd  text eol=crlf
+*.ps1  text eol=crlf
+
+# Binary files — no conversion
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.db   binary
+*.sqlite binary
+*.sqlite3 binary
+*.pdf  binary
+*.zip  binary
+*.gz   binary
+*.tar  binary

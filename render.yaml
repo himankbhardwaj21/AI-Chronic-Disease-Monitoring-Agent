@@ -1,0 +1,85 @@
+# ================================================================
+# render.yaml — Render.com Deployment Configuration
+# ChronicCare AI — IBM watsonx.ai Healthcare Application
+#
+# Deploy to Render:
+#   1. Push this repo to GitHub
+#   2. Go to https://dashboard.render.com
+#   3. New → Web Service → Connect your GitHub repo
+#   4. Render auto-detects this file
+# ================================================================
+
+services:
+  - type: web
+    name: chroniccare-ai
+    env: python
+    region: oregon          # or: ohio, frankfurt, singapore
+    plan: free              # free | starter | standard
+    branch: main
+
+    # Build command — installs all dependencies
+    buildCommand: pip install -r requirements.txt
+
+    # Start command — Gunicorn with 2 workers, 120s timeout
+    startCommand: gunicorn wsgi:app --workers 2 --bind 0.0.0.0:$PORT --timeout 120 --log-level info
+
+    # Health check endpoint
+    healthCheckPath: /
+
+    # Auto-deploy on push to main branch
+    autoDeploy: true
+
+    # ----------------------------------------------------------------
+    # Environment Variables
+    # Set these in the Render dashboard under Environment tab
+    # DO NOT put real values here — this file is committed to git
+    # ----------------------------------------------------------------
+    envVars:
+      - key: FLASK_ENV
+        value: production
+
+      - key: FLASK_DEBUG
+        value: "False"
+
+      - key: PORT
+        fromService:
+          type: web
+          name: chroniccare-ai
+          property: port
+
+      # Secrets — set manually in Render dashboard:
+      - key: SECRET_KEY
+        generateValue: true          # Render auto-generates a secure value
+
+      - key: IBM_API_KEY
+        sync: false                  # Must be set manually in dashboard
+
+      - key: IBM_PROJECT_ID
+        sync: false                  # Must be set manually in dashboard
+
+      - key: IBM_REGION
+        value: us-south
+
+      - key: WATSONX_URL
+        value: https://us-south.ml.cloud.ibm.com
+
+      - key: GRANITE_MODEL_ID
+        value: ibm/granite-3-8b-instruct
+
+      - key: WTF_CSRF_ENABLED
+        value: "True"
+
+      - key: SESSION_COOKIE_SECURE
+        value: "True"
+
+      - key: MAX_TOKENS
+        value: "1024"
+
+      - key: TEMPERATURE
+        value: "0.7"
+
+      - key: TOP_P
+        value: "0.9"
+
+      - key: TOP_K
+        value: "50"

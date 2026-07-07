@@ -1,0 +1,303 @@
+{% extends 'base.html' %}
+{% block title %}Health Goals — {{ patient.name }}{% endblock %}
+{% block page_title %}<i class="bi bi-trophy-fill me-2 text-warning"></i>Smart Health Goals{% endblock %}
+{% block page_subtitle %}{{ patient.name }} &bull; AI-coached health goal tracking{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="d-flex flex-wrap gap-2 mb-4 align-items-center justify-content-between">
+  <div class="d-flex gap-2">
+    <span class="badge bg-success-subtle text-success rounded-pill px-3 py-2">
+      {{ goals|selectattr('status','equalto','completed')|list|length }} Completed
+    </span>
+    <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-2">
+      {{ goals|selectattr('status','equalto','active')|list|length }} Active
+    </span>
+  </div>
+  <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newGoalModal">
+    <i class="bi bi-plus-circle me-1"></i>New Health Goal
+  </button>
+</div>
+
+<!-- Active Goals Grid -->
+{% if goals %}
+<div class="row g-4 mb-4">
+  {% for goal in goals %}
+  <div class="col-12 col-md-6 col-xl-4">
+    <div class="card border-0 shadow-sm h-100 goal-card border-top border-3 border-{{ goal.color }} {% if goal.status == 'completed' %}opacity-75{% endif %}">
+      <div class="card-body p-4">
+
+        <!-- Header -->
+        <div class="d-flex align-items-start gap-3 mb-3">
+          <div class="goal-icon bg-{{ goal.color }}-subtle rounded-3 p-2 flex-shrink-0">
+            <i class="bi {{ goal.icon }} text-{{ goal.color }} fs-4"></i>
+          </div>
+          <div class="flex-grow-1">
+            <h6 class="fw-bold mb-0">{{ goal.title }}</h6>
+            {% if goal.description %}<small class="text-muted">{{ goal.description }}</small>{% endif %}
+          </div>
+          {% if goal.badge_earned %}
+          <div class="flex-shrink-0" title="{{ goal.badge_earned }}">
+            <i class="{{ badge_icons.get(goal.badge_earned, 'bi-award-fill text-warning') }} fs-4"></i>
+          </div>
+          {% endif %}
+        </div>
+
+        <!-- Progress Ring + Stats -->
+        <div class="d-flex align-items-center gap-3 mb-3">
+          <div class="progress-ring-container flex-shrink-0">
+            <canvas class="goal-progress-ring" data-progress="{{ goal.calc_progress() }}" data-color="{{ goal.color }}" width="70" height="70"></canvas>
+            <div class="progress-ring-label">{{ goal.calc_progress()|int }}%</div>
+          </div>
+          <div class="flex-grow-1">
+            <div class="d-flex justify-content-between small mb-1">
+              <span class="text-muted">Start</span>
+              <span class="fw-medium">{{ goal.baseline_value }} {{ goal.target_unit }}</span>
+            </div>
+            <div class="d-flex justify-content-between small mb-1">
+              <span class="text-muted">Current</span>
+              <span class="fw-medium {% if goal.status == 'completed' %}text-success{% endif %}">{{ goal.current_value or '—' }} {{ goal.target_unit }}</span>
+            </div>
+            <div class="d-flex justify-content-between small mb-1">
+              <span class="text-muted">Target</span>
+              <span class="fw-bold text-{{ goal.color }}">{{ goal.target_value }} {{ goal.target_unit }}</span>
+            </div>
+            {% if goal.days_remaining() is not none %}
+            <div class="text-muted" style="font-size:11px">
+              <i class="bi bi-calendar me-1"></i>{{ goal.days_remaining() }} days remaining
+            </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="progress mb-3" style="height:8px">
+          <div class="progress-bar bg-{{ goal.color }} progress-bar-animated"
+               role="progressbar"
+               style="width:{{ goal.calc_progress() }}%"
+               aria-valuenow="{{ goal.calc_progress() }}" aria-valuemin="0" aria-valuemax="100">
+          </div>
+        </div>
+
+        <!-- Status Badge -->
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <span class="badge {% if goal.status == 'completed' %}bg-success{% elif goal.status == 'active' %}bg-primary{% else %}bg-secondary{% endif %} rounded-pill">
+            {% if goal.status == 'completed' %}
+              <i class="bi bi-check-circle me-1"></i>Completed!
+            {% elif goal.badge_earned %}
+              <i class="bi bi-award me-1"></i>{{ goal.badge_earned }}
+            {% else %}
+              <i class="bi bi-clock me-1"></i>In Progress
+            {% endif %}
+          </span>
+        </div>
+
+        <!-- AI Coaching -->
+        {% if goal.ai_coaching_tip %}
+        <div class="coaching-tip p-2 bg-primary-subtle rounded-3 mb-3">
+          <div class="small text-muted mb-1"><i class="bi bi-robot me-1"></i>AI Coach Tip</div>
+          <div class="small">{{ goal.ai_coaching_tip[:150] }}{% if goal.ai_coaching_tip|length > 150 %}…{% endif %}</div>
+        </div>
+        {% endif %}
+        {% if goal.motivational_message %}
+        <div class="motivational p-2 bg-success-subtle rounded-3 mb-3">
+          <div class="small">{{ goal.motivational_message }}</div>
+        </div>
+        {% endif %}
+
+        <!-- Actions -->
+        <div class="d-flex gap-2">
+          {% if goal.status == 'active' %}
+          <button class="btn btn-sm btn-outline-{{ goal.color }} flex-fill"
+                  onclick="openUpdateModal({{ goal.id }}, '{{ goal.title }}', {{ goal.current_value or 0 }}, '{{ goal.target_unit }}')"
+                  data-bs-toggle="modal" data-bs-target="#updateGoalModal">
+            <i class="bi bi-pencil me-1"></i>Update
+          </button>
+          {% endif %}
+          <button class="btn btn-sm btn-outline-info"
+                  onclick="refreshCoaching({{ patient.id }}, {{ goal.id }}, this)"
+                  title="Get fresh AI coaching">
+            <i class="bi bi-robot"></i>
+          </button>
+          <form method="post" action="{{ url_for('goals.delete_goal', patient_id=patient.id, goal_id=goal.id) }}"
+                onsubmit="return confirm('Delete this goal?')" class="d-inline">
+            <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete goal">
+              <i class="bi bi-trash"></i>
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="text-center py-5 mb-4">
+  <i class="bi bi-trophy fs-1 text-muted d-block mb-3"></i>
+  <h5 class="text-muted">No Goals Set</h5>
+  <p class="text-muted">Create your first health goal and get personalized AI coaching.</p>
+  <button class="btn btn-primary mt-2" data-bs-toggle="modal" data-bs-target="#newGoalModal">
+    <i class="bi bi-plus-circle me-1"></i>Create First Goal
+  </button>
+</div>
+{% endif %}
+
+<!-- New Goal Modal -->
+<div class="modal fade" id="newGoalModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header border-0">
+        <h5 class="modal-title"><i class="bi bi-trophy-fill text-warning me-2"></i>Create Health Goal</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="post" action="{{ url_for('goals.create_goal', patient_id=patient.id) }}">
+        <div class="modal-body">
+          <!-- Goal Type Selection -->
+          <label class="form-label fw-medium">Goal Type</label>
+          <div class="row g-2 mb-3" id="goalTypeGrid">
+            {% for gtype, info in goal_presets.items() %}
+            <div class="col-6 col-md-3">
+              <input type="radio" class="btn-check" name="goal_type" id="gt_{{ gtype }}"
+                     value="{{ gtype }}" {% if loop.first %}checked{% endif %}
+                     onchange="updateGoalForm('{{ gtype }}','{{ info.title }}','{{ info.unit }}','{{ info.description }}')">
+              <label class="btn btn-outline-secondary goal-type-btn w-100 text-center py-2 px-1" for="gt_{{ gtype }}" style="font-size:12px">
+                <i class="bi {{ info.icon }} d-block mb-1 fs-5 text-{{ info.color }}"></i>
+                {{ info.title.replace(' ','<br>')|safe }}
+              </label>
+            </div>
+            {% endfor %}
+          </div>
+
+          <div class="row g-3">
+            <div class="col-12">
+              <label class="form-label fw-medium">Goal Title</label>
+              <input type="text" class="form-control" name="title" id="goalTitleInput"
+                     value="{{ goal_presets['reduce_blood_sugar']['title'] }}" required>
+            </div>
+            <div class="col-12">
+              <label class="form-label fw-medium">Description</label>
+              <input type="text" class="form-control" name="description" id="goalDescInput"
+                     value="{{ goal_presets['reduce_blood_sugar']['description'] }}">
+            </div>
+            <div class="col-6">
+              <label class="form-label fw-medium">Starting Value (current)</label>
+              <input type="number" class="form-control" name="baseline_value" step="0.1" required placeholder="e.g. 160">
+            </div>
+            <div class="col-6">
+              <label class="form-label fw-medium">Target Value</label>
+              <input type="number" class="form-control" name="target_value" step="0.1" required placeholder="e.g. 130">
+            </div>
+            <div class="col-6">
+              <label class="form-label fw-medium">Unit</label>
+              <input type="text" class="form-control" name="target_unit" id="goalUnitInput"
+                     value="{{ goal_presets['reduce_blood_sugar']['unit'] }}" placeholder="mg/dL">
+            </div>
+            <div class="col-6">
+              <label class="form-label fw-medium">Target Date</label>
+              <input type="date" class="form-control" name="target_date">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer border-0">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary px-4">
+            <i class="bi bi-robot me-1"></i>Create Goal & Get AI Coaching
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Update Progress Modal -->
+<div class="modal fade" id="updateGoalModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header border-0">
+        <h5 class="modal-title" id="updateGoalTitle">Update Progress</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="post" id="updateGoalForm">
+        <div class="modal-body">
+          <label class="form-label fw-medium">Current Value (<span id="updateGoalUnit"></span>)</label>
+          <input type="number" class="form-control form-control-lg" name="current_value"
+                 id="updateGoalValue" step="0.1" required>
+        </div>
+        <div class="modal-footer border-0">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Update Progress</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const patientId = {{ patient.id }};
+
+// Goal type form updater
+function updateGoalForm(type, title, unit, desc) {
+  document.getElementById('goalTitleInput').value = title;
+  document.getElementById('goalDescInput').value = desc;
+  document.getElementById('goalUnitInput').value = unit;
+}
+
+// Update modal helper
+function openUpdateModal(goalId, title, currentValue, unit) {
+  document.getElementById('updateGoalTitle').textContent = 'Update: ' + title;
+  document.getElementById('updateGoalUnit').textContent = unit;
+  document.getElementById('updateGoalValue').value = currentValue;
+  document.getElementById('updateGoalForm').action = `/goals/${patientId}/update/${goalId}`;
+}
+
+// AI coaching refresh
+async function refreshCoaching(patientId, goalId, btn) {
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+  try {
+    const res = await fetch(`/goals/api/${patientId}/coach/${goalId}`, {method:'POST'});
+    const data = await res.json();
+    if (data.status === 'ok') {
+      showToast('AI coaching updated!', 'success');
+      setTimeout(() => location.reload(), 800);
+    }
+  } catch(e) { showToast('Failed to get coaching.', 'danger'); }
+  btn.disabled = false;
+  btn.innerHTML = '<i class="bi bi-robot"></i>';
+}
+
+// Draw progress rings
+document.querySelectorAll('.goal-progress-ring').forEach(canvas => {
+  const progress = parseFloat(canvas.dataset.progress || 0);
+  const colorName = canvas.dataset.color || 'primary';
+  const colorMap = {
+    primary:'#1a56db', danger:'#dc2626', success:'#059669',
+    warning:'#d97706', info:'#0ea5e9', purple:'#7c3aed'
+  };
+  const color = colorMap[colorName] || '#1a56db';
+  const ctx = canvas.getContext('2d');
+  const size = 70, center = size/2, radius = center - 5;
+  const startAngle = -Math.PI/2;
+  const endAngle = startAngle + (progress/100) * 2*Math.PI;
+  const isDark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+  const bgColor = isDark ? '#30363d' : '#e2e8f0';
+
+  // Background ring
+  ctx.beginPath();
+  ctx.arc(center, center, radius, 0, 2*Math.PI);
+  ctx.strokeStyle = bgColor;
+  ctx.lineWidth = 7;
+  ctx.stroke();
+
+  // Progress arc
+  ctx.beginPath();
+  ctx.arc(center, center, radius, startAngle, endAngle);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 7;
+  ctx.lineCap = 'round';
+  ctx.stroke();
+});
+</script>
+{% endblock %}

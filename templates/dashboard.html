@@ -1,0 +1,467 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard — {{ patient.name }}{% endblock %}
+{% block page_title %}<i class="bi bi-grid-1x2-fill me-2 text-primary"></i>Health Dashboard{% endblock %}
+{% block page_subtitle %}{{ patient.name }} &bull; {{ patient.primary_disease }} &bull; Last updated: {% if latest %}{{ latest.recorded_at.strftime('%b %d, %Y %H:%M') }}{% else %}No data yet{% endif %}{% endblock %}
+
+{% block content %}
+<div class="dashboard-grid">
+
+  <!-- ========== ROW 1: Patient Card + Risk Meter + Quick Stats ========== -->
+  <div class="row g-3 mb-3">
+
+    <!-- Patient Card -->
+    <div class="col-12 col-xl-3">
+      <div class="card h-100 patient-card border-0 shadow-sm">
+        <div class="card-body text-center p-4">
+          <div class="avatar-circle mx-auto mb-3">{{ patient.name[0] }}</div>
+          <h5 class="fw-bold mb-1">{{ patient.name }}</h5>
+          <p class="text-muted small mb-2">{{ patient.age }}y &bull; {{ patient.gender }} &bull; {{ patient.blood_group or 'N/A' }}</p>
+          <span class="badge disease-badge mb-3">{{ patient.primary_disease }}</span>
+
+          {% if patient.secondary_diseases %}
+          <p class="text-muted mb-1" style="font-size:11px">
+            <i class="bi bi-plus-circle me-1"></i>{{ patient.secondary_diseases }}
+          </p>
+          {% endif %}
+
+          <hr class="my-2">
+          <div class="row text-center g-0">
+            <div class="col-4">
+              <div class="stat-mini">{{ patient.height_cm or '—' }}<span>cm</span></div>
+              <div class="stat-mini-label">Height</div>
+            </div>
+            <div class="col-4 border-start border-end">
+              <div class="stat-mini">{{ patient.weight_kg or '—' }}<span>kg</span></div>
+              <div class="stat-mini-label">Weight</div>
+            </div>
+            <div class="col-4">
+              <div class="stat-mini bmi-value" data-bmi="{{ patient.bmi or 0 }}">{{ patient.bmi or '—' }}</div>
+              <div class="stat-mini-label">BMI</div>
+            </div>
+          </div>
+          <hr class="my-2">
+          <div class="d-flex gap-2 justify-content-center">
+            <a href="{{ url_for('patients.view', patient_id=patient.id) }}" class="btn btn-sm btn-outline-primary">
+              <i class="bi bi-person me-1"></i>Profile
+            </a>
+            <a href="{{ url_for('health_data.input_data', patient_id=patient.id) }}" class="btn btn-sm btn-primary">
+              <i class="bi bi-plus me-1"></i>Log Data
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Risk Meter + Health Score -->
+    <div class="col-12 col-md-6 col-xl-3">
+      <div class="card h-100 border-0 shadow-sm">
+        <div class="card-body p-3">
+          <div class="d-flex align-items-center justify-content-between mb-2">
+            <h6 class="mb-0 fw-semibold"><i class="bi bi-shield-fill me-2 text-danger"></i>Risk Level</h6>
+            <span class="badge bg-{{ get_risk_color(risk.level) }} rounded-pill">{{ risk.level }}</span>
+          </div>
+          <!-- Risk Gauge -->
+          <div class="risk-gauge-container my-2">
+            <canvas id="riskGauge" width="200" height="110"></canvas>
+            <div class="risk-gauge-value text-{{ get_risk_color(risk.level) }}">{{ risk.percentage }}%</div>
+          </div>
+          <div class="risk-factors mt-2">
+            {% for factor in risk.factors[:3] %}
+            <div class="risk-factor-item"><i class="bi bi-exclamation-circle text-warning me-1"></i><small>{{ factor }}</small></div>
+            {% else %}
+            <div class="text-muted small text-center">No significant risk factors</div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Health Score Gauge -->
+    <div class="col-12 col-md-6 col-xl-3">
+      <div class="card h-100 border-0 shadow-sm">
+        <div class="card-body p-3 text-center">
+          <h6 class="fw-semibold mb-2"><i class="bi bi-award-fill me-2 text-warning"></i>Health Score</h6>
+          <div class="health-score-ring mx-auto mb-2">
+            <canvas id="healthScoreGauge" width="160" height="160"></canvas>
+            <div class="health-score-center">
+              <span class="score-number">{{ latest.health_score|int if latest and latest.health_score else 0 }}</span>
+              <span class="score-label">/100</span>
+            </div>
+          </div>
+          {% if wellness_score is not none %}
+          <div class="wellness-bar mt-2">
+            <div class="d-flex justify-content-between small mb-1">
+              <span class="text-muted">Wellness Score</span>
+              <span class="fw-semibold">{{ wellness_score }}/100</span>
+            </div>
+            <div class="progress" style="height:6px">
+              <div class="progress-bar bg-success" style="width:{{ wellness_score }}%"></div>
+            </div>
+          </div>
+          {% endif %}
+          {% if latest %}
+          <div class="risk-badge-row mt-2">
+            <span class="badge bg-{{ get_risk_color(latest.risk_level) }}-subtle text-{{ get_risk_color(latest.risk_level) }} border border-{{ get_risk_color(latest.risk_level) }}-subtle rounded-pill">
+              {{ latest.risk_level or 'Unknown' }} Risk
+            </span>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Upcoming / Quick Links -->
+    <div class="col-12 col-xl-3">
+      <div class="card h-100 border-0 shadow-sm">
+        <div class="card-body p-3">
+          <h6 class="fw-semibold mb-2"><i class="bi bi-calendar-check me-2 text-info"></i>Upcoming</h6>
+          {% if patient.next_appointment %}
+          <div class="upcoming-item mb-2 p-2 rounded-3 bg-info bg-opacity-10 border border-info border-opacity-25">
+            <div class="d-flex align-items-center gap-2">
+              <i class="bi bi-hospital text-info"></i>
+              <div>
+                <div class="small fw-medium">Doctor Visit</div>
+                <div class="text-muted" style="font-size:11px">{{ patient.next_appointment }}</div>
+                {% if patient.doctor_name %}<div class="text-muted" style="font-size:11px">{{ patient.doctor_name }}</div>{% endif %}
+              </div>
+            </div>
+          </div>
+          {% endif %}
+          <h6 class="fw-semibold mb-2 mt-3"><i class="bi bi-capsule me-2 text-success"></i>Today's Meds</h6>
+          {% for med in medications[:4] %}
+          <div class="med-reminder d-flex align-items-center justify-content-between mb-1 p-2 rounded-3 bg-light">
+            <div>
+              <div class="small fw-medium">{{ med.name }} {{ med.dosage }}</div>
+              <div class="text-muted" style="font-size:10px">{{ med.timing or med.frequency }}</div>
+            </div>
+            <button class="btn btn-xs btn-success rounded-circle" onclick="markMedTaken({{ med.id }}, this)" title="Mark taken">
+              <i class="bi bi-check2"></i>
+            </button>
+          </div>
+          {% else %}
+          <p class="text-muted small">No medications added</p>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== ROW 2: Vitals Cards ========== -->
+  {% set v = latest %}
+  <div class="row g-3 mb-3">
+    <div class="col-6 col-md-4 col-lg-2">
+      <div class="vital-card card border-0 shadow-sm h-100 vital-bp">
+        <div class="card-body p-3 text-center">
+          <i class="bi bi-droplet-fill vital-icon text-danger"></i>
+          <div class="vital-value">{% if v and v.systolic_bp %}{{ v.systolic_bp }}/{{ v.diastolic_bp }}{% else %}—{% endif %}</div>
+          <div class="vital-unit">mmHg</div>
+          <div class="vital-label">Blood Pressure</div>
+          {% if v and v.systolic_bp %}<div class="vital-status {% if v.systolic_bp >= 140 %}text-danger{% elif v.systolic_bp >= 130 %}text-warning{% else %}text-success{% endif %}">
+            {% if v.systolic_bp >= 140 %}High{% elif v.systolic_bp >= 130 %}Elevated{% else %}Normal{% endif %}
+          </div>{% endif %}
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-4 col-lg-2">
+      <div class="vital-card card border-0 shadow-sm h-100 vital-glucose">
+        <div class="card-body p-3 text-center">
+          <i class="bi bi-activity vital-icon text-warning"></i>
+          <div class="vital-value">{{ v.blood_glucose if v and v.blood_glucose else '—' }}</div>
+          <div class="vital-unit">mg/dL</div>
+          <div class="vital-label">Blood Sugar</div>
+          {% if v and v.blood_glucose %}<div class="vital-status {% if v.blood_glucose >= 180 %}text-danger{% elif v.blood_glucose >= 140 %}text-warning{% else %}text-success{% endif %}">
+            {% if v.blood_glucose >= 180 %}High{% elif v.blood_glucose >= 140 %}Elevated{% else %}Normal{% endif %}
+          </div>{% endif %}
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-4 col-lg-2">
+      <div class="vital-card card border-0 shadow-sm h-100 vital-hr">
+        <div class="card-body p-3 text-center">
+          <i class="bi bi-heart-pulse vital-icon text-pink"></i>
+          <div class="vital-value">{{ v.heart_rate if v and v.heart_rate else '—' }}</div>
+          <div class="vital-unit">bpm</div>
+          <div class="vital-label">Heart Rate</div>
+          {% if v and v.heart_rate %}<div class="vital-status {% if v.heart_rate > 100 or v.heart_rate < 60 %}text-warning{% else %}text-success{% endif %}">
+            {% if v.heart_rate > 100 %}Fast{% elif v.heart_rate < 60 %}Slow{% else %}Normal{% endif %}
+          </div>{% endif %}
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-4 col-lg-2">
+      <div class="vital-card card border-0 shadow-sm h-100 vital-o2">
+        <div class="card-body p-3 text-center">
+          <i class="bi bi-wind vital-icon text-info"></i>
+          <div class="vital-value">{{ v.oxygen_saturation if v and v.oxygen_saturation else '—' }}</div>
+          <div class="vital-unit">%</div>
+          <div class="vital-label">Oxygen (SpO₂)</div>
+          {% if v and v.oxygen_saturation %}<div class="vital-status {% if v.oxygen_saturation < 94 %}text-danger{% elif v.oxygen_saturation < 96 %}text-warning{% else %}text-success{% endif %}">
+            {% if v.oxygen_saturation < 94 %}Low{% elif v.oxygen_saturation < 96 %}Fair{% else %}Good{% endif %}
+          </div>{% endif %}
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-4 col-lg-2">
+      <div class="vital-card card border-0 shadow-sm h-100 vital-temp">
+        <div class="card-body p-3 text-center">
+          <i class="bi bi-thermometer-half vital-icon text-orange"></i>
+          <div class="vital-value">{{ v.body_temperature if v and v.body_temperature else '—' }}</div>
+          <div class="vital-unit">°C</div>
+          <div class="vital-label">Temperature</div>
+          {% if v and v.body_temperature %}<div class="vital-status {% if v.body_temperature >= 38 %}text-danger{% else %}text-success{% endif %}">
+            {% if v.body_temperature >= 38 %}Fever{% else %}Normal{% endif %}
+          </div>{% endif %}
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-4 col-lg-2">
+      <div class="vital-card card border-0 shadow-sm h-100 vital-mood">
+        <div class="card-body p-3 text-center">
+          <i class="bi bi-emoji-smile vital-icon text-purple"></i>
+          <div class="vital-value" style="font-size:1.4rem">{{ v.mood if v and v.mood else '—' }}</div>
+          <div class="vital-unit">&nbsp;</div>
+          <div class="vital-label">Mood</div>
+          {% if v and v.stress_level %}<div class="vital-status {% if v.stress_level >= 7 %}text-danger{% elif v.stress_level >= 5 %}text-warning{% else %}text-success{% endif %}">
+            Stress: {{ v.stress_level }}/10
+          </div>{% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== ROW 3: Charts ========== -->
+  <div class="row g-3 mb-3">
+    <!-- Blood Pressure Chart -->
+    <div class="col-12 col-lg-6">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-transparent border-0 d-flex align-items-center justify-content-between pt-3 px-3">
+          <h6 class="mb-0 fw-semibold"><i class="bi bi-droplet me-2 text-danger"></i>Blood Pressure Trend</h6>
+          <span class="badge bg-danger-subtle text-danger rounded-pill">14 days</span>
+        </div>
+        <div class="card-body pt-1 pb-3 px-3">
+          <canvas id="bpChart" height="130"></canvas>
+        </div>
+      </div>
+    </div>
+    <!-- Blood Glucose Chart -->
+    <div class="col-12 col-lg-6">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-transparent border-0 d-flex align-items-center justify-content-between pt-3 px-3">
+          <h6 class="mb-0 fw-semibold"><i class="bi bi-activity me-2 text-warning"></i>Blood Glucose Trend</h6>
+          <span class="badge bg-warning-subtle text-warning rounded-pill">14 days</span>
+        </div>
+        <div class="card-body pt-1 pb-3 px-3">
+          <canvas id="glucoseChart" height="130"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== ROW 4: More Charts ========== -->
+  <div class="row g-3 mb-3">
+    <!-- Heart Rate -->
+    <div class="col-12 col-md-6 col-lg-4">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-transparent border-0 pt-3 px-3">
+          <h6 class="mb-0 fw-semibold"><i class="bi bi-heart-pulse me-2 text-pink"></i>Heart Rate</h6>
+        </div>
+        <div class="card-body pt-1"><canvas id="hrChart" height="140"></canvas></div>
+      </div>
+    </div>
+    <!-- Oxygen -->
+    <div class="col-12 col-md-6 col-lg-4">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-transparent border-0 pt-3 px-3">
+          <h6 class="mb-0 fw-semibold"><i class="bi bi-wind me-2 text-info"></i>Oxygen Saturation</h6>
+        </div>
+        <div class="card-body pt-1"><canvas id="o2Chart" height="140"></canvas></div>
+      </div>
+    </div>
+    <!-- Health Score -->
+    <div class="col-12 col-lg-4">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-transparent border-0 pt-3 px-3">
+          <h6 class="mb-0 fw-semibold"><i class="bi bi-award me-2 text-success"></i>Daily Health Score</h6>
+        </div>
+        <div class="card-body pt-1"><canvas id="scoreChart" height="140"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== ROW 5: Lifestyle + Alerts ========== -->
+  <div class="row g-3 mb-3">
+    <!-- Lifestyle Metrics -->
+    <div class="col-12 col-md-6 col-lg-4">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-transparent border-0 pt-3 px-3">
+          <h6 class="mb-0 fw-semibold"><i class="bi bi-sun me-2 text-warning"></i>Lifestyle Metrics</h6>
+        </div>
+        <div class="card-body pt-2">
+          {% macro lifestyle_bar(label, value, target, unit, color) %}
+          <div class="lifestyle-metric mb-3">
+            <div class="d-flex justify-content-between small mb-1">
+              <span>{{ label }}</span>
+              <span class="fw-medium">{{ value or '—' }} {{ unit }} <span class="text-muted">/ {{ target }}</span></span>
+            </div>
+            <div class="progress" style="height:7px">
+              <div class="progress-bar bg-{{ color }}"
+                   style="width:{% if value %}{{ [value/target*100, 100]|min }}{% else %}0{% endif %}%"
+                   role="progressbar"></div>
+            </div>
+          </div>
+          {% endmacro %}
+          {{ lifestyle_bar('Sleep', v.sleep_hours if v else none, 9, 'hrs', 'primary') }}
+          {{ lifestyle_bar('Water Intake', v.water_intake_liters if v else none, 2.5, 'L', 'info') }}
+          {{ lifestyle_bar('Exercise', v.exercise_minutes if v else none, 60, 'min', 'success') }}
+          {% if v and v.steps_count %}
+          {{ lifestyle_bar('Steps', v.steps_count, 10000, '', 'warning') }}
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Weekly Stats Summary -->
+    <div class="col-12 col-md-6 col-lg-4">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-transparent border-0 pt-3 px-3">
+          <h6 class="mb-0 fw-semibold"><i class="bi bi-bar-chart me-2 text-primary"></i>7-Day Averages</h6>
+        </div>
+        <div class="card-body pt-2">
+          {% if stats_7d %}
+          <div class="stat-row"><span>Avg Glucose</span><span class="fw-medium {% if (stats_7d.avg_glucose or 0) > 180 %}text-danger{% else %}text-success{% endif %}">{{ stats_7d.avg_glucose or '—' }} mg/dL</span></div>
+          <div class="stat-row"><span>Avg BP</span><span class="fw-medium {% if (stats_7d.avg_systolic or 0) > 140 %}text-danger{% else %}text-success{% endif %}">{{ stats_7d.avg_systolic or '—' }}/{{ stats_7d.avg_diastolic or '—' }}</span></div>
+          <div class="stat-row"><span>Avg Heart Rate</span><span class="fw-medium">{{ stats_7d.avg_hr or '—' }} bpm</span></div>
+          <div class="stat-row"><span>Avg SpO₂</span><span class="fw-medium {% if (stats_7d.avg_o2 or 100) < 94 %}text-danger{% else %}text-success{% endif %}">{{ stats_7d.avg_o2 or '—' }}%</span></div>
+          <div class="stat-row"><span>Avg Sleep</span><span class="fw-medium">{{ stats_7d.avg_sleep or '—' }} hrs</span></div>
+          <div class="stat-row"><span>Avg Exercise</span><span class="fw-medium">{{ stats_7d.avg_exercise or '—' }} min</span></div>
+          <div class="stat-row border-top pt-2 mt-1"><span class="fw-semibold">Health Score</span><span class="fw-bold text-primary">{{ stats_7d.avg_health_score or '—' }}/100</span></div>
+          {% else %}
+          <p class="text-muted text-center py-3">No data for past 7 days</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Alerts -->
+    <div class="col-12 col-lg-4" id="alerts">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-transparent border-0 pt-3 px-3 d-flex align-items-center justify-content-between">
+          <h6 class="mb-0 fw-semibold"><i class="bi bi-bell-fill me-2 text-danger"></i>Active Alerts</h6>
+          {% set active_alerts = alerts|selectattr('is_resolved', 'equalto', False)|list %}
+          {% if active_alerts %}<span class="badge bg-danger rounded-pill">{{ active_alerts|length }}</span>{% endif %}
+        </div>
+        <div class="card-body pt-2 alerts-container" style="max-height:300px;overflow-y:auto">
+          {% if alerts %}
+            {% for alert in alerts %}
+            {% if not alert.is_resolved %}
+            <div class="alert-item p-2 mb-2 rounded-3 border border-{{ 'danger' if alert.severity in ['Critical','Emergency'] else 'warning' if alert.severity == 'Warning' else 'info' }}-subtle bg-{{ 'danger' if alert.severity in ['Critical','Emergency'] else 'warning' if alert.severity == 'Warning' else 'info' }}-subtle"
+                 id="alert-{{ alert.id }}">
+              <div class="d-flex justify-content-between align-items-start">
+                <div class="d-flex gap-2 align-items-start">
+                  <i class="{{ get_severity_icon(alert.severity) }} mt-1 flex-shrink-0"></i>
+                  <div>
+                    <div class="small fw-semibold">{{ alert.title }}</div>
+                    <div class="text-muted" style="font-size:11px">{{ alert.message[:80] }}{% if alert.message|length > 80 %}…{% endif %}</div>
+                    {% if alert.recommended_action %}<div class="mt-1" style="font-size:10px"><i class="bi bi-arrow-right me-1"></i>{{ alert.recommended_action[:60] }}{% if alert.recommended_action|length > 60 %}…{% endif %}</div>{% endif %}
+                  </div>
+                </div>
+                <button class="btn btn-xs btn-outline-secondary ms-1 flex-shrink-0" onclick="resolveAlert({{ patient.id }}, {{ alert.id }})" title="Resolve">
+                  <i class="bi bi-check2"></i>
+                </button>
+              </div>
+            </div>
+            {% endif %}
+            {% endfor %}
+          {% else %}
+          <div class="text-center py-4 text-muted">
+            <i class="bi bi-check-circle-fill text-success fs-2 d-block mb-2"></i>
+            No active alerts
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== ROW 6: AI Insights + Medication ========== -->
+  <div class="row g-3">
+    <!-- AI Health Insights -->
+    <div class="col-12 col-lg-8">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header bg-transparent border-0 pt-3 px-3 d-flex align-items-center justify-content-between">
+          <h6 class="mb-0 fw-semibold"><i class="bi bi-robot me-2 text-primary"></i>AI Health Insights
+            <span class="badge bg-primary-subtle text-primary rounded-pill ms-1" style="font-size:9px">IBM Granite</span>
+          </h6>
+          <button class="btn btn-sm btn-outline-primary" onclick="loadInsights({{ patient.id }})" id="insightsBtn">
+            <i class="bi bi-arrow-clockwise me-1"></i>Generate
+          </button>
+        </div>
+        <div class="card-body" id="insightsContent">
+          <div class="text-center py-4 text-muted">
+            <i class="bi bi-robot fs-3 d-block mb-2 text-primary"></i>
+            <p class="mb-2">Click "Generate" to get AI-powered health insights</p>
+            <div class="d-flex gap-2 justify-content-center flex-wrap">
+              <a href="{{ url_for('agents.vitals_analysis', patient_id=patient.id) }}" class="btn btn-sm btn-outline-danger"><i class="bi bi-heart-pulse me-1"></i>Analyze Vitals</a>
+              <a href="{{ url_for('agents.risk_prediction', patient_id=patient.id) }}" class="btn btn-sm btn-outline-warning"><i class="bi bi-shield-exclamation me-1"></i>Risk Report</a>
+              <a href="{{ url_for('agents.lifestyle_recommendations', patient_id=patient.id) }}" class="btn btn-sm btn-outline-success"><i class="bi bi-sun me-1"></i>Lifestyle Tips</a>
+              <a href="{{ url_for('chat.chat_home', patient_id=patient.id) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-chat-dots me-1"></i>Ask CareBot</a>
+              <a href="{{ url_for('health_report.report_page', patient_id=patient.id) }}" class="btn btn-sm btn-primary"><i class="bi bi-file-earmark-text me-1"></i>Generate Report</a>
+              <a href="{{ url_for('prediction.prediction_page', patient_id=patient.id) }}" class="btn btn-sm btn-outline-info"><i class="bi bi-graph-up-arrow me-1"></i>AI Prediction</a>
+              <a href="{{ url_for('emergency.emergency_dashboard', patient_id=patient.id) }}" class="btn btn-sm btn-outline-danger"><i class="bi bi-exclamation-octagon me-1"></i>Emergency</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Medication Adherence -->
+    <div class="col-12 col-lg-4">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-transparent border-0 pt-3 px-3">
+          <h6 class="mb-0 fw-semibold"><i class="bi bi-capsule me-2 text-success"></i>Medication Adherence</h6>
+        </div>
+        <div class="card-body pt-2">
+          {% if medications %}
+            {% for med in medications %}
+            <div class="med-adherence-item mb-3">
+              <div class="d-flex justify-content-between small mb-1">
+                <span class="fw-medium">{{ med.name }}</span>
+                <span class="{% if med.adherence_pct >= 90 %}text-success{% elif med.adherence_pct >= 70 %}text-warning{% else %}text-danger{% endif %}">{{ med.adherence_pct }}%</span>
+              </div>
+              <div class="progress" style="height:6px">
+                <div class="progress-bar {% if med.adherence_pct >= 90 %}bg-success{% elif med.adherence_pct >= 70 %}bg-warning{% else %}bg-danger{% endif %}"
+                     style="width:{{ med.adherence_pct }}%"></div>
+              </div>
+              <div class="text-muted mt-1" style="font-size:10px">{{ med.dosage }} — {{ med.frequency }}</div>
+            </div>
+            {% endfor %}
+            <div class="text-center mt-2">
+              <a href="{{ url_for('agents.medication_guidance', patient_id=patient.id) }}" class="btn btn-sm btn-outline-success">
+                <i class="bi bi-robot me-1"></i>AI Medication Guidance
+              </a>
+            </div>
+          {% else %}
+          <div class="text-center py-3 text-muted">
+            <i class="bi bi-capsule fs-2 d-block mb-2"></i>
+            No medications tracked
+            <div class="mt-2"><a href="{{ url_for('patients.view', patient_id=patient.id) }}" class="btn btn-sm btn-outline-success">Add Medication</a></div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const chartData = {{ chart_data|safe }};
+const healthScore = {{ latest.health_score|int if latest and latest.health_score else 0 }};
+const riskPct = {{ risk.percentage }};
+const riskLevel = "{{ risk.level }}";
+const patientId = {{ patient.id }};
+</script>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}

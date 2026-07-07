@@ -1,0 +1,75 @@
+﻿# ================================================================
+# ChronicCare AI — .gitignore
+# ================================================================
+
+# --- Secrets (NEVER commit these) ---
+.env
+*.env.local
+.env.production
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*\.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+*.egg
+.eggs/
+*.whl
+pip-wheel-metadata/
+
+# --- Virtual Environments ---
+venv/
+.venv/
+env/
+ENV/
+.virtualenv/
+
+# --- Database ---
+*.db
+*.sqlite
+*.sqlite3
+data/chroniccare.db
+data/*.db
+instance/
+
+# --- IDE & Editors ---
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- Testing ---
+.pytest_cache/
+.coverage
+htmlcov/
+test_*.py
+*_test.py
+
+# --- Logs ---
+*.log
+logs/
+
+# --- OS ---
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# --- Build Artifacts ---
+*.pyc
+*.pyo
+.cache/
+
+# --- Render / Deployment ---
+.render-buildpacks.json
+
+# --- Jupyter Notebooks (if any) ---
+.ipynb_checkpoints/
+*.ipynb

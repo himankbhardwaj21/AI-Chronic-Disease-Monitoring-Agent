@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% block title %}Lifestyle Recommendations{% endblock %}
+{% block page_title %}<i class="bi bi-sun-fill me-2 text-info"></i>WellnessCoach — Lifestyle Guide{% endblock %}
+{% block page_subtitle %}{{ patient.name }} &bull; Personalized wellness recommendations{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+  <!-- Wellness Score -->
+  <div class="col-12 col-md-4 col-lg-3">
+    <div class="card border-0 shadow-sm text-center mb-3">
+      <div class="card-body p-4">
+        <i class="bi bi-sun-fill fs-1 text-warning d-block mb-2"></i>
+        <h2 class="fw-bold text-info">{{ result.wellness_score|int }}</h2>
+        <div class="text-muted">/100 Wellness Score</div>
+        <div class="progress mt-2" style="height:8px">
+          <div class="progress-bar bg-info" style="width:{{ result.wellness_score }}%"></div>
+        </div>
+      </div>
+    </div>
+
+    {% if latest_record %}
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-transparent border-0 pt-3 px-3">
+        <h6 class="mb-0 fw-semibold"><i class="bi bi-bar-chart me-2"></i>Latest Metrics</h6>
+      </div>
+      <div class="card-body p-3">
+        <div class="metric-row"><i class="bi bi-moon text-primary me-2"></i><span>Sleep</span><span class="ms-auto fw-medium">{{ latest_record.sleep_hours or '—' }} hrs</span></div>
+        <div class="metric-row"><i class="bi bi-droplet text-info me-2"></i><span>Water</span><span class="ms-auto fw-medium">{{ latest_record.water_intake_liters or '—' }} L</span></div>
+        <div class="metric-row"><i class="bi bi-bicycle text-success me-2"></i><span>Exercise</span><span class="ms-auto fw-medium">{{ latest_record.exercise_minutes or '—' }} min</span></div>
+        <div class="metric-row"><i class="bi bi-emoji-neutral text-warning me-2"></i><span>Stress</span><span class="ms-auto fw-medium">{{ latest_record.stress_level or '—' }}/10</span></div>
+        <div class="metric-row"><i class="bi bi-speedometer2 text-danger me-2"></i><span>Steps</span><span class="ms-auto fw-medium">{{ latest_record.steps_count or '—' }}</span></div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- AI Recommendations -->
+  <div class="col-12 col-md-8 col-lg-9">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-transparent border-0 pt-3 px-4 d-flex align-items-center gap-2">
+        <div class="agent-mini-badge bg-info-subtle rounded-2 p-2"><i class="bi bi-robot text-info"></i></div>
+        <div>
+          <h6 class="mb-0 fw-semibold">WellnessCoach Recommendations</h6>
+          <small class="text-muted">IBM Granite AI — Lifestyle & Wellness Agent</small>
+        </div>
+      </div>
+      <div class="card-body px-4 pb-4 ai-response-body">
+        {{ result.recommendations_html|safe }}
+      </div>
+    </div>
+  </div>
+</div>
+<div class="mt-4">
+  <a href="{{ url_for('agents.agents_home', patient_id=patient.id) }}" class="btn btn-outline-secondary">
+    <i class="bi bi-arrow-left me-1"></i>All Agents
+  </a>
+</div>
+{% endblock %}

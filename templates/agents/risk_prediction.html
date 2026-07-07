@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% block title %}Risk Prediction{% endblock %}
+{% block page_title %}<i class="bi bi-shield-exclamation me-2 text-warning"></i>RiskSense AI — Risk Prediction{% endblock %}
+{% block page_subtitle %}{{ patient.name }} &bull; Disease progression and risk assessment{% endblock %}
+
+{% block content %}
+{% if result %}
+<div class="row g-4">
+  <!-- Risk Score Card -->
+  <div class="col-12 col-md-4 col-lg-3">
+    <div class="card border-0 shadow-sm text-center mb-3 border-top border-4 border-{{ 'danger' if result.risk_level in ['High','Critical'] else 'warning' if result.risk_level == 'Medium' else 'success' }}">
+      <div class="card-body p-4">
+        <i class="bi bi-shield-fill fs-1 text-{{ 'danger' if result.risk_level in ['High','Critical'] else 'warning' if result.risk_level == 'Medium' else 'success' }} d-block mb-2"></i>
+        <h2 class="fw-bold text-{{ 'danger' if result.risk_level in ['High','Critical'] else 'warning' if result.risk_level == 'Medium' else 'success' }}">{{ result.risk_level }}</h2>
+        <div class="text-muted">Risk Level</div>
+        <div class="badge bg-{{ 'danger' if result.risk_level in ['High','Critical'] else 'warning text-dark' if result.risk_level == 'Medium' else 'success' }} fs-5 mt-2 rounded-pill">{{ result.risk_percentage }}%</div>
+      </div>
+    </div>
+
+    <!-- Risk Factors -->
+    {% if result.risk_factors %}
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-transparent border-0 pt-3 px-3">
+        <h6 class="mb-0 fw-semibold"><i class="bi bi-exclamation-triangle me-2 text-warning"></i>Risk Factors</h6>
+      </div>
+      <div class="card-body p-3">
+        {% for factor in result.risk_factors %}
+        <div class="d-flex align-items-start gap-2 mb-2">
+          <i class="bi bi-dot fs-4 text-danger mt-n1 flex-shrink-0"></i>
+          <small>{{ factor }}</small>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- AI Analysis -->
+  <div class="col-12 col-md-8 col-lg-9">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-transparent border-0 pt-3 px-4 d-flex align-items-center gap-2">
+        <div class="agent-mini-badge bg-warning-subtle rounded-2 p-2"><i class="bi bi-robot text-warning"></i></div>
+        <div>
+          <h6 class="mb-0 fw-semibold">RiskSense AI Analysis</h6>
+          <small class="text-muted">IBM Granite AI — Risk Prediction Agent</small>
+        </div>
+      </div>
+      <div class="card-body px-4 pb-4 ai-response-body">
+        {{ result.analysis_html|safe }}
+      </div>
+    </div>
+  </div>
+</div>
+{% else %}
+<div class="card border-0 shadow-sm">
+  <div class="card-body text-center py-5">
+    <i class="bi bi-shield-exclamation fs-1 text-muted d-block mb-3"></i>
+    <h5 class="text-muted">Not Enough Data</h5>
+    <p class="text-muted">Log at least a few health readings for risk prediction.</p>
+    <a href="{{ url_for('health_data.input_data', patient_id=patient.id) }}" class="btn btn-primary">Log Health Data</a>
+  </div>
+</div>
+{% endif %}
+<div class="mt-4">
+  <a href="{{ url_for('agents.agents_home', patient_id=patient.id) }}" class="btn btn-outline-secondary">
+    <i class="bi bi-arrow-left me-1"></i>All Agents
+  </a>
+</div>
+{% endblock %}

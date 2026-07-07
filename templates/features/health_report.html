@@ -1,0 +1,202 @@
+{% extends 'base.html' %}
+{% block title %}AI Health Report — {{ patient.name }}{% endblock %}
+{% block page_title %}<i class="bi bi-file-earmark-text-fill me-2 text-primary"></i>AI Health Report{% endblock %}
+{% block page_subtitle %}{{ patient.name }} &bull; Comprehensive IBM Granite-powered health analysis{% endblock %}
+
+{% block content %}
+<!-- Report Controls -->
+<div class="d-flex flex-wrap gap-2 mb-4 align-items-center">
+  <div class="d-flex gap-2">
+    <button class="btn btn-outline-primary" onclick="regenerateReport({{ patient.id }})" id="regenBtn">
+      <i class="bi bi-arrow-clockwise me-1"></i>Regenerate Report
+    </button>
+    <a href="{{ url_for('health_report.download_pdf', patient_id=patient.id) }}" class="btn btn-danger">
+      <i class="bi bi-file-earmark-pdf me-1"></i>Download PDF
+    </a>
+    <button class="btn btn-outline-secondary" onclick="window.print()">
+      <i class="bi bi-printer me-1"></i>Print
+    </button>
+  </div>
+  <div class="ms-auto d-flex gap-2 align-items-center">
+    <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-2">
+      <i class="bi bi-robot me-1"></i>IBM Granite AI
+    </span>
+    {% if result %}<span class="badge bg-success-subtle text-success rounded-pill px-3 py-2">{{ result.record_count }} records analyzed</span>{% endif %}
+  </div>
+</div>
+
+<div class="row g-4" id="reportBody">
+
+  <!-- Patient Summary Card -->
+  <div class="col-12 col-lg-3">
+    <div class="card border-0 shadow-sm mb-3 sticky-top" style="top:80px">
+      <div class="card-body p-4 text-center">
+        <div class="avatar-circle mx-auto mb-3">{{ patient.name[0] }}</div>
+        <h6 class="fw-bold mb-1">{{ patient.name }}</h6>
+        <p class="text-muted small mb-2">{{ patient.age }}y &bull; {{ patient.gender }}</p>
+        <span class="badge disease-badge mb-3 d-block">{{ patient.primary_disease }}</span>
+        <div class="row g-0 text-center border rounded-3 p-2 mb-3">
+          <div class="col-6">
+            <div class="fw-bold {% if (stats.avg_health_score or 0) >= 75 %}text-success{% elif (stats.avg_health_score or 0) >= 60 %}text-warning{% else %}text-danger{% endif %}">
+              {{ stats.avg_health_score or '—' }}
+            </div>
+            <div class="text-muted" style="font-size:10px">Health Score</div>
+          </div>
+          <div class="col-6 border-start">
+            <div class="fw-bold text-{{ 'danger' if risk.level in ['High','Critical'] else 'warning' if risk.level == 'Medium' else 'success' }}">
+              {{ risk.level }}
+            </div>
+            <div class="text-muted" style="font-size:10px">Risk Level</div>
+          </div>
+        </div>
+        {% if stats %}
+        <div class="text-start">
+          <div class="stat-row small"><span>Avg Glucose</span><span class="ms-auto fw-medium">{{ stats.avg_glucose or '—' }} mg/dL</span></div>
+          <div class="stat-row small"><span>Avg BP</span><span class="ms-auto fw-medium">{{ stats.avg_systolic or '—' }}/{{ stats.avg_diastolic or '—' }}</span></div>
+          <div class="stat-row small"><span>Avg HR</span><span class="ms-auto fw-medium">{{ stats.avg_hr or '—' }} bpm</span></div>
+          <div class="stat-row small"><span>Med Adherence</span><span class="ms-auto fw-medium">{{ result.med_adherence if result else '—' }}%</span></div>
+        </div>
+        {% endif %}
+        <div class="mt-3">
+          <a href="{{ url_for('prediction.prediction_page', patient_id=patient.id) }}" class="btn btn-sm btn-outline-primary w-100">
+            <i class="bi bi-graph-up-arrow me-1"></i>View Predictions
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Report Content -->
+  <div class="col-12 col-lg-9">
+    <div class="card border-0 shadow-sm" id="reportCard">
+      <div class="card-header bg-transparent border-0 pt-4 px-4 d-flex align-items-center gap-3">
+        <div class="agent-mini-badge bg-primary-subtle rounded-2 p-2">
+          <i class="bi bi-robot text-primary fs-5"></i>
+        </div>
+        <div>
+          <h6 class="mb-0 fw-bold">HealthReportAI — Comprehensive Health Report</h6>
+          <small class="text-muted">IBM Granite AI &bull; Generated {{ result.avg_stats and 'just now' or 'N/A' }}</small>
+        </div>
+      </div>
+
+      <!-- Skeleton Loader (hidden when loaded) -->
+      <div class="card-body px-4 pb-2" id="skeletonLoader" style="display:none">
+        {% for i in range(6) %}
+        <div class="skeleton skeleton-text mb-2" style="width:{{ [90,75,85,60,80,70][loop.index0] }}%"></div>
+        {% endfor %}
+        <div class="skeleton skeleton-text mb-3" style="width:50%"></div>
+        {% for i in range(4) %}
+        <div class="skeleton skeleton-text mb-2" style="width:{{ [88,72,95,65][loop.index0] }}%"></div>
+        {% endfor %}
+      </div>
+
+      <div class="card-body px-4 pb-4 ai-response-body" id="reportContent">
+        {% if result and result.report_html %}
+          {{ result.report_html|safe }}
+          <!-- Explain AI button area -->
+          <div class="mt-4 pt-3 border-top">
+            <button class="btn btn-outline-info btn-sm explain-btn"
+                    data-recommendation="{{ result.report_content[:200]|replace('"','') if result.report_content else '' }}"
+                    data-patient="{{ patient.id }}"
+                    data-context="report"
+                    onclick="openExplainModal(this)">
+              <i class="bi bi-lightbulb me-1"></i>Why this report? Explain in simple terms
+            </button>
+          </div>
+        {% else %}
+          <div class="text-center py-5 text-muted">
+            <i class="bi bi-file-earmark-text fs-1 d-block mb-3 text-muted"></i>
+            <p>No health records found. <a href="{{ url_for('health_data.input_data', patient_id=patient.id) }}">Log health data</a> to generate a report.</p>
+          </div>
+        {% endif %}
+      </div>
+
+      <div class="card-footer bg-transparent border-0 px-4 pb-4">
+        <div class="alert border border-warning-subtle bg-warning-subtle rounded-3 py-2 px-3 mb-0">
+          <small class="text-muted"><i class="bi bi-info-circle me-1"></i>
+            AI-generated report for informational use. Always discuss with your healthcare provider.
+          </small>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Explain AI Modal -->
+<div class="modal fade" id="explainModal" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header border-0">
+        <h5 class="modal-title"><i class="bi bi-lightbulb-fill text-warning me-2"></i>Why This Recommendation?</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="explainModalBody">
+        <div class="text-center py-4">
+          <div class="spinner-border text-primary mb-2"></div>
+          <p class="text-muted">IBM Granite is explaining...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const patientId = {{ patient.id }};
+
+async function regenerateReport(pid) {
+  const btn = document.getElementById('regenBtn');
+  const content = document.getElementById('reportContent');
+  const skeleton = document.getElementById('skeletonLoader');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Generating...';
+  content.style.display = 'none';
+  skeleton.style.display = 'block';
+  try {
+    const res = await fetch(`/health-report/api/${pid}/regenerate`, {method:'POST'});
+    const data = await res.json();
+    if (data.report_html) {
+      content.innerHTML = data.report_html + `
+        <div class="mt-4 pt-3 border-top">
+          <button class="btn btn-outline-info btn-sm explain-btn"
+                  data-recommendation="${(data.report_content||'').substring(0,200)}"
+                  data-patient="${pid}" data-context="report"
+                  onclick="openExplainModal(this)">
+            <i class="bi bi-lightbulb me-1"></i>Why this report? Explain in simple terms
+          </button>
+        </div>`;
+      skeleton.style.display = 'none';
+      content.style.display = 'block';
+      showToast('Report regenerated with IBM Granite!', 'success');
+    }
+  } catch(e) {
+    skeleton.style.display = 'none';
+    content.style.display = 'block';
+    showToast('Failed to regenerate report', 'danger');
+  }
+  btn.disabled = false;
+  btn.innerHTML = '<i class="bi bi-arrow-clockwise me-1"></i>Regenerate Report';
+}
+
+async function openExplainModal(btn) {
+  const recommendation = btn.dataset.recommendation || '';
+  const context = btn.dataset.context || 'general';
+  const modal = new bootstrap.Modal(document.getElementById('explainModal'));
+  const body = document.getElementById('explainModalBody');
+  body.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary mb-2"></div><p class="text-muted">IBM Granite is explaining your health insights...</p></div>';
+  modal.show();
+  try {
+    const res = await fetch(`/explain/api/${patientId}/why`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({recommendation, context_type: context})
+    });
+    const data = await res.json();
+    body.innerHTML = `<div class="ai-response-body">${data.explanation_html || data.explanation || 'No explanation available.'}</div>`;
+  } catch(e) {
+    body.innerHTML = '<p class="text-danger">Failed to load explanation.</p>';
+  }
+}
+</script>
+{% endblock %}

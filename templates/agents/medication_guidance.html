@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% block title %}Medication Guidance{% endblock %}
+{% block page_title %}<i class="bi bi-capsule me-2 text-success"></i>MedCoach — Medication Assistant{% endblock %}
+{% block page_subtitle %}{{ patient.name }} &bull; Medication management and adherence{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+  <!-- Adherence Score -->
+  <div class="col-12 col-md-4 col-lg-3">
+    <div class="card border-0 shadow-sm text-center mb-3">
+      <div class="card-body p-4">
+        <i class="bi bi-capsule-pill fs-1 text-success d-block mb-2"></i>
+        <h2 class="fw-bold text-success">{{ result.adherence_score }}%</h2>
+        <div class="text-muted">Adherence Score</div>
+        <div class="progress mt-2" style="height:8px">
+          <div class="progress-bar {% if result.adherence_score >= 90 %}bg-success{% elif result.adherence_score >= 70 %}bg-warning{% else %}bg-danger{% endif %}"
+               style="width:{{ result.adherence_score }}%"></div>
+        </div>
+        <div class="badge mt-2 {% if result.adherence_score >= 90 %}bg-success{% elif result.adherence_score >= 70 %}bg-warning text-dark{% else %}bg-danger{% endif %} rounded-pill">
+          {% if result.adherence_score >= 90 %}Excellent{% elif result.adherence_score >= 70 %}Good{% elif result.adherence_score >= 50 %}Fair{% else %}Poor{% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Daily Schedule -->
+    {% if schedule %}
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-transparent border-0 pt-3 px-3">
+        <h6 class="mb-0 fw-semibold"><i class="bi bi-clock me-2 text-primary"></i>Today's Schedule</h6>
+      </div>
+      <div class="card-body p-3">
+        {% for slot in schedule %}
+        <div class="mb-3">
+          <div class="fw-semibold small text-primary mb-1"><i class="bi bi-sun me-1"></i>{{ slot.time }}</div>
+          {% for med in slot.medications %}
+          <div class="d-flex align-items-center gap-2 mb-1">
+            <i class="bi bi-capsule text-success"></i>
+            <small>{{ med }}</small>
+          </div>
+          {% endfor %}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- AI Analysis -->
+  <div class="col-12 col-md-8 col-lg-9">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-transparent border-0 pt-3 px-4 d-flex align-items-center gap-2">
+        <div class="agent-mini-badge bg-success-subtle rounded-2 p-2"><i class="bi bi-robot text-success"></i></div>
+        <div>
+          <h6 class="mb-0 fw-semibold">MedCoach Guidance</h6>
+          <small class="text-muted">IBM Granite AI — Medication Assistant Agent</small>
+        </div>
+      </div>
+      <div class="card-body px-4 pb-4 ai-response-body">
+        {% if result.analysis_html %}
+          {{ result.analysis_html|safe }}
+        {% else %}
+          <div class="text-center py-4 text-muted">
+            <i class="bi bi-capsule fs-2 d-block mb-2"></i>
+            No medications added yet. <a href="{{ url_for('patients.view', patient_id=patient.id) }}">Add medications</a> to get AI guidance.
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+<div class="mt-4">
+  <a href="{{ url_for('agents.agents_home', patient_id=patient.id) }}" class="btn btn-outline-secondary">
+    <i class="bi bi-arrow-left me-1"></i>All Agents
+  </a>
+</div>
+{% endblock %}

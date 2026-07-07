@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+{% block title %}AI Agents — {{ patient.name }}{% endblock %}
+{% block page_title %}<i class="bi bi-robot me-2 text-primary"></i>AI Agents Hub{% endblock %}
+{% block page_subtitle %}{{ patient.name }} &bull; 5 Specialized IBM Granite AI Agents{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+  {% set agents = [
+    {
+      'name': 'VitalGuard',
+      'subtitle': 'Health Monitoring Agent',
+      'desc': 'Analyze vital signs, detect abnormal values, and get instant health status assessment.',
+      'icon': 'bi-heart-pulse-fill',
+      'color': 'danger',
+      'url': url_for('agents.vitals_analysis', patient_id=patient.id),
+      'features': ['Blood glucose analysis', 'Blood pressure interpretation', 'Heart rate & SpO₂', 'Temperature & BMI', 'Vital correlations']
+    },
+    {
+      'name': 'RiskSense AI',
+      'subtitle': 'Risk Prediction Agent',
+      'desc': 'Predict disease progression, identify emergency conditions, and generate risk scores.',
+      'icon': 'bi-shield-exclamation',
+      'color': 'warning',
+      'url': url_for('agents.risk_prediction', patient_id=patient.id),
+      'features': ['Risk score (Low/Med/High)', 'Disease progression', 'Complication prediction', 'Emergency warnings', 'Preventive actions']
+    },
+    {
+      'name': 'MedCoach',
+      'subtitle': 'Medication Assistant Agent',
+      'desc': 'Track medication adherence, get drug guidance, and receive personalized reminders.',
+      'icon': 'bi-capsule',
+      'color': 'success',
+      'url': url_for('agents.medication_guidance', patient_id=patient.id),
+      'features': ['Adherence tracking', 'Dosage explanations', 'Missed dose protocol', 'Side effect info', 'Smart reminders']
+    },
+    {
+      'name': 'WellnessCoach',
+      'subtitle': 'Lifestyle Recommendation Agent',
+      'desc': 'Get personalized diet, exercise, sleep, and stress management recommendations.',
+      'icon': 'bi-sun-fill',
+      'color': 'info',
+      'url': url_for('agents.lifestyle_recommendations', patient_id=patient.id),
+      'features': ['Disease-specific nutrition', 'Safe exercise plan', 'Sleep optimization', 'Hydration goals', 'Stress reduction']
+    },
+    {
+      'name': 'ReportMD',
+      'subtitle': 'Medical Report Agent',
+      'desc': 'Generate comprehensive daily, weekly, and monthly health reports for doctors.',
+      'icon': 'bi-file-earmark-medical-fill',
+      'color': 'purple',
+      'url': url_for('agents.report_agent', patient_id=patient.id),
+      'features': ['Daily/Weekly/Monthly', 'Health trend analysis', 'Doctor recommendations', 'Risk summary', 'PDF export']
+    }
+  ] %}
+
+  {% for agent in agents %}
+  <div class="col-12 col-md-6 col-xl-4">
+    <div class="card border-0 shadow-sm agent-card h-100 border-top border-4 border-{{ agent.color }}">
+      <div class="card-body p-4">
+        <div class="d-flex align-items-start gap-3 mb-3">
+          <div class="agent-icon-box bg-{{ agent.color }}-subtle rounded-3 p-3">
+            <i class="bi {{ agent.icon }} text-{{ agent.color }} fs-3"></i>
+          </div>
+          <div>
+            <h5 class="fw-bold mb-0">{{ agent.name }}</h5>
+            <small class="text-muted">{{ agent.subtitle }}</small>
+          </div>
+        </div>
+        <p class="text-muted small mb-3">{{ agent.desc }}</p>
+        <ul class="list-unstyled mb-3">
+          {% for feature in agent.features %}
+          <li class="small py-1 border-bottom border-opacity-10">
+            <i class="bi bi-check2 text-{{ agent.color }} me-2"></i>{{ feature }}
+          </li>
+          {% endfor %}
+        </ul>
+        <a href="{{ agent.url }}" class="btn btn-{{ agent.color }} w-100">
+          <i class="bi {{ agent.icon }} me-2"></i>Launch {{ agent.name }}
+        </a>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+
+  <!-- CareBot Chat Card -->
+  <div class="col-12 col-md-6 col-xl-4">
+    <div class="card border-0 shadow-sm agent-card h-100 border-top border-4 border-primary">
+      <div class="card-body p-4">
+        <div class="d-flex align-items-start gap-3 mb-3">
+          <div class="agent-icon-box bg-primary-subtle rounded-3 p-3">
+            <i class="bi bi-chat-dots-fill text-primary fs-3"></i>
+          </div>
+          <div>
+            <h5 class="fw-bold mb-0">CareBot</h5>
+            <small class="text-muted">AI Chat Assistant</small>
+          </div>
+        </div>
+        <p class="text-muted small mb-3">Ask anything — medications, diet, disease education, emergency guidance, and more.</p>
+        <ul class="list-unstyled mb-3">
+          {% for feature in ['Real-time health Q&A', 'Disease education', 'Diet & exercise advice', 'Emergency guidance', 'Multilingual support'] %}
+          <li class="small py-1 border-bottom border-opacity-10">
+            <i class="bi bi-check2 text-primary me-2"></i>{{ feature }}
+          </li>
+          {% endfor %}
+        </ul>
+        <a href="{{ url_for('chat.chat_home', patient_id=patient.id) }}" class="btn btn-primary w-100">
+          <i class="bi bi-chat-dots-fill me-2"></i>Open CareBot Chat
+        </a>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

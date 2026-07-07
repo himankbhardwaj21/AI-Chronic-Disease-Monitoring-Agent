@@ -1,0 +1,214 @@
+{% extends 'base.html' %}
+{% block title %}{{ patient.name }} — Profile{% endblock %}
+{% block page_title %}<i class="bi bi-person-fill me-2 text-primary"></i>Patient Profile{% endblock %}
+{% block page_subtitle %}{{ patient.name }} &bull; {{ patient.primary_disease }}{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+
+  <!-- Profile Card -->
+  <div class="col-12 col-lg-4">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body text-center p-4">
+        <div class="avatar-circle-lg mx-auto mb-3">{{ patient.name[0] }}</div>
+        <h4 class="fw-bold">{{ patient.name }}</h4>
+        <p class="text-muted mb-1">{{ patient.age }} years &bull; {{ patient.gender }}</p>
+        <span class="badge disease-badge fs-6 mb-3">{{ patient.primary_disease }}</span>
+        {% if patient.secondary_diseases %}
+        <p class="text-muted small">Also: {{ patient.secondary_diseases }}</p>
+        {% endif %}
+        <div class="row g-0 text-center my-3 border rounded-3 p-2">
+          <div class="col-3">
+            <div class="fw-bold">{{ patient.blood_group or '—' }}</div><div class="text-muted" style="font-size:10px">Blood</div>
+          </div>
+          <div class="col-3 border-start">
+            <div class="fw-bold bmi-value" data-bmi="{{ patient.bmi or 0 }}">{{ patient.bmi or '—' }}</div><div class="text-muted" style="font-size:10px">BMI</div>
+          </div>
+          <div class="col-3 border-start">
+            <div class="fw-bold">{{ patient.height_cm or '—' }}</div><div class="text-muted" style="font-size:10px">cm</div>
+          </div>
+          <div class="col-3 border-start">
+            <div class="fw-bold">{{ patient.weight_kg or '—' }}</div><div class="text-muted" style="font-size:10px">kg</div>
+          </div>
+        </div>
+        <div class="text-start">
+          <div class="info-row"><i class="bi bi-hospital text-info me-2"></i><strong>Doctor:</strong> {{ patient.doctor_name or 'Not set' }}</div>
+          <div class="info-row"><i class="bi bi-telephone text-success me-2"></i><strong>Contact:</strong> {{ patient.doctor_contact or 'Not set' }}</div>
+          {% if patient.next_appointment %}
+          <div class="info-row"><i class="bi bi-calendar text-primary me-2"></i><strong>Next Visit:</strong> {{ patient.next_appointment }}</div>
+          {% endif %}
+          <div class="info-row"><i class="bi bi-droplet text-danger me-2"></i><strong>Allergies:</strong> {{ patient.known_allergies or 'None known' }}</div>
+        </div>
+        <div class="d-flex gap-2 mt-3">
+          <a href="{{ url_for('patients.edit', patient_id=patient.id) }}" class="btn btn-outline-primary flex-fill btn-sm">
+            <i class="bi bi-pencil me-1"></i>Edit
+          </a>
+          <a href="{{ url_for('dashboard.dashboard', patient_id=patient.id) }}" class="btn btn-primary flex-fill btn-sm">
+            <i class="bi bi-grid me-1"></i>Dashboard
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Details -->
+  <div class="col-12 col-lg-8">
+    <div class="row g-4">
+
+      <!-- Lifestyle & Habits -->
+      <div class="col-12">
+        <div class="card border-0 shadow-sm">
+          <div class="card-header bg-transparent border-0 pt-3 px-4">
+            <h6 class="mb-0 fw-semibold"><i class="bi bi-sun me-2 text-warning"></i>Lifestyle & Habits</h6>
+          </div>
+          <div class="card-body px-4 pb-4">
+            <div class="row g-3">
+              <div class="col-4">
+                <div class="lifestyle-badge">
+                  <i class="bi bi-fire me-1"></i>
+                  <span class="fw-medium">{{ patient.smoking_status or 'Unknown' }}</span>
+                  <div class="text-muted" style="font-size:10px">Smoking</div>
+                </div>
+              </div>
+              <div class="col-4">
+                <div class="lifestyle-badge">
+                  <i class="bi bi-cup me-1"></i>
+                  <span class="fw-medium">{{ patient.alcohol_consumption or 'Unknown' }}</span>
+                  <div class="text-muted" style="font-size:10px">Alcohol</div>
+                </div>
+              </div>
+              <div class="col-4">
+                <div class="lifestyle-badge">
+                  <i class="bi bi-bicycle me-1"></i>
+                  <span class="fw-medium">{{ patient.activity_level or 'Unknown' }}</span>
+                  <div class="text-muted" style="font-size:10px">Activity</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Medical History -->
+      {% if patient.medical_history %}
+      <div class="col-12 col-md-6">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-header bg-transparent border-0 pt-3 px-4">
+            <h6 class="mb-0 fw-semibold"><i class="bi bi-journal-medical me-2 text-danger"></i>Medical History</h6>
+          </div>
+          <div class="card-body px-4 pb-4">
+            <p class="text-muted small mb-0">{{ patient.medical_history }}</p>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Emergency Contact -->
+      {% if patient.emergency_contact_name %}
+      <div class="col-12 col-md-6">
+        <div class="card border-0 shadow-sm border-danger border-opacity-25 h-100">
+          <div class="card-header bg-danger bg-opacity-10 border-0 pt-3 px-4">
+            <h6 class="mb-0 fw-semibold text-danger"><i class="bi bi-exclamation-triangle me-2"></i>Emergency Contact</h6>
+          </div>
+          <div class="card-body px-4 pb-4">
+            <div class="fw-bold fs-6">{{ patient.emergency_contact_name }}</div>
+            <div class="text-muted">{{ patient.emergency_contact_relation }}</div>
+            <a href="tel:{{ patient.emergency_contact_phone }}" class="text-danger fw-medium">
+              <i class="bi bi-telephone me-1"></i>{{ patient.emergency_contact_phone }}
+            </a>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Medications Section -->
+  <div class="col-12">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-transparent border-0 pt-3 px-4 d-flex align-items-center justify-content-between">
+        <h6 class="mb-0 fw-semibold"><i class="bi bi-capsule me-2 text-success"></i>Medications ({{ medications|length }})</h6>
+        <button class="btn btn-sm btn-outline-success" data-bs-toggle="collapse" data-bs-target="#addMedForm">
+          <i class="bi bi-plus me-1"></i>Add
+        </button>
+      </div>
+
+      <!-- Add Medication Form -->
+      <div class="collapse px-4 pb-3" id="addMedForm">
+        <form method="post" action="{{ url_for('patients.add_medication', patient_id=patient.id) }}">
+          <div class="row g-2 mt-1 p-3 bg-light rounded-3">
+            <div class="col-6 col-md-3">
+              <input type="text" class="form-control form-control-sm" name="name" placeholder="Medication Name *" required>
+            </div>
+            <div class="col-6 col-md-2">
+              <input type="text" class="form-control form-control-sm" name="dosage" placeholder="Dosage e.g. 500mg">
+            </div>
+            <div class="col-6 col-md-2">
+              <input type="text" class="form-control form-control-sm" name="frequency" placeholder="Frequency">
+            </div>
+            <div class="col-6 col-md-3">
+              <input type="text" class="form-control form-control-sm" name="timing" placeholder="Timing e.g. 8am, 8pm">
+            </div>
+            <div class="col-12 col-md-2">
+              <input type="text" class="form-control form-control-sm" name="purpose" placeholder="Purpose">
+            </div>
+            <div class="col-12 text-end">
+              <button type="submit" class="btn btn-sm btn-success"><i class="bi bi-plus me-1"></i>Add Medication</button>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <div class="card-body px-4 pb-4">
+        {% if medications %}
+        <div class="table-responsive">
+          <table class="table table-hover align-middle">
+            <thead class="table-light">
+              <tr>
+                <th>Medication</th><th>Dosage</th><th>Frequency</th><th>Timing</th><th>Purpose</th><th>Adherence</th><th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for med in medications %}
+              <tr class="{% if not med.is_active %}text-muted opacity-50{% endif %}">
+                <td class="fw-medium">
+                  {{ med.name }}
+                  {% if not med.is_active %}<span class="badge bg-secondary ms-1 rounded-pill" style="font-size:9px">Inactive</span>{% endif %}
+                </td>
+                <td>{{ med.dosage or '—' }}</td>
+                <td>{{ med.frequency or '—' }}</td>
+                <td>{{ med.timing or '—' }}</td>
+                <td>{{ med.purpose or '—' }}</td>
+                <td>
+                  <div class="d-flex align-items-center gap-2">
+                    <div class="progress flex-fill" style="height:5px;min-width:50px">
+                      <div class="progress-bar {% if med.adherence_pct >= 90 %}bg-success{% elif med.adherence_pct >= 70 %}bg-warning{% else %}bg-danger{% endif %}"
+                           style="width:{{ med.adherence_pct }}%"></div>
+                    </div>
+                    <small class="fw-medium">{{ med.adherence_pct }}%</small>
+                  </div>
+                </td>
+                <td>
+                  <div class="d-flex gap-1">
+                    <button class="btn btn-xs btn-success" onclick="markMedTaken({{ med.id }}, this)" title="Mark taken"><i class="bi bi-check2"></i></button>
+                    <form method="post" action="{{ url_for('patients.delete_medication', med_id=med.id) }}" class="d-inline" onsubmit="return confirm('Delete {{ med.name }}?')">
+                      <button type="submit" class="btn btn-xs btn-outline-danger" title="Delete"><i class="bi bi-trash"></i></button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="text-center py-3 text-muted">
+          <i class="bi bi-capsule fs-2 d-block mb-2"></i>No medications added yet
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

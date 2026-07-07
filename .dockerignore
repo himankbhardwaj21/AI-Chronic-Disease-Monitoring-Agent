@@ -1,0 +1,73 @@
+# ============================================================
+# ChronicCare AI — .dockerignore
+# Excludes files from Docker build context for smaller images
+# and to prevent credentials from leaking into the container.
+# ============================================================
+
+# Environment & secrets — NEVER include in Docker image
+.env
+.env.*
+!.env.example
+
+# Git
+.git
+.gitignore
+.github
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environments
+.venv
+venv/
+env/
+ENV/
+
+# Development & testing
+*.log
+*.tmp
+*.bak
+*.swp
+*.swo
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# Database (data is mounted at runtime, not baked in)
+data/*.db
+data/*.sqlite3
+instance/
+
+# IDE / editor
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Documentation & CI (not needed at runtime)
+README.md
+LICENSE
+docs/
+*.md
+
+# Deployment validators
+deployment_check.py
+render.yaml
+runtime.txt
+Procfile

@@ -1,0 +1,155 @@
+{% set pid = patient.id if patient is defined and patient else '' %}
+
+<ul class="nav flex-column sidebar-menu">
+
+  <li class="nav-section-label px-3 py-1 mt-1">
+    <small class="text-uppercase text-muted fw-semibold" style="font-size:10px;letter-spacing:.08em">Main</small>
+  </li>
+
+  <li class="nav-item">
+    <a class="nav-link sidebar-link {% if active_page == 'dashboard' %}active{% endif %}"
+       href="{% if pid %}{{ url_for('dashboard.dashboard', patient_id=pid) }}{% else %}{{ url_for('dashboard.index') }}{% endif %}">
+      <i class="bi bi-grid-1x2-fill nav-icon"></i>
+      <span>Dashboard</span>
+    </a>
+  </li>
+
+  <li class="nav-item">
+    <a class="nav-link sidebar-link {% if active_page == 'patients' %}active{% endif %}"
+       href="{{ url_for('patients.list_patients') }}">
+      <i class="bi bi-people-fill nav-icon"></i>
+      <span>Patients</span>
+    </a>
+  </li>
+
+  {% if pid %}
+  <li class="nav-item">
+    <a class="nav-link sidebar-link {% if active_page == 'health' %}active{% endif %}"
+       href="{{ url_for('health_data.input_data', patient_id=pid) }}">
+      <i class="bi bi-activity nav-icon"></i>
+      <span>Log Health Data</span>
+    </a>
+  </li>
+  {% endif %}
+
+  <li class="nav-section-label px-3 py-1 mt-2">
+    <small class="text-uppercase text-muted fw-semibold" style="font-size:10px;letter-spacing:.08em">AI Agents</small>
+  </li>
+
+  {% if pid %}
+  <li class="nav-item">
+    <a class="nav-link sidebar-link {% if active_page == 'agents' %}active{% endif %}"
+       href="{{ url_for('agents.agents_home', patient_id=pid) }}">
+      <i class="bi bi-robot nav-icon"></i>
+      <span>AI Agents Hub</span>
+    </a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link sidebar-link ps-4"
+       href="{{ url_for('agents.vitals_analysis', patient_id=pid) }}">
+      <i class="bi bi-heart-pulse nav-icon text-danger"></i>
+      <span>Health Monitor</span>
+    </a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link sidebar-link ps-4"
+       href="{{ url_for('agents.risk_prediction', patient_id=pid) }}">
+      <i class="bi bi-shield-exclamation nav-icon text-warning"></i>
+      <span>Risk Prediction</span>
+    </a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link sidebar-link ps-4"
+       href="{{ url_for('agents.medication_guidance', patient_id=pid) }}">
+      <i class="bi bi-capsule nav-icon text-success"></i>
+      <span>Medication Coach</span>
+    </a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link sidebar-link ps-4"
+       href="{{ url_for('agents.lifestyle_recommendations', patient_id=pid) }}">
+      <i class="bi bi-sun-fill nav-icon text-info"></i>
+      <span>Lifestyle Guide</span>
+    </a>
+  </li>
+
+  <li class="nav-section-label px-3 py-1 mt-2">
+    <small class="text-uppercase text-muted fw-semibold" style="font-size:10px;letter-spacing:.08em">AI Features</small>
+  </li>
+
+  <li class="nav-item">
+    <a class="nav-link sidebar-link {% if active_page == 'chat' %}active{% endif %}"
+       href="{{ url_for('chat.chat_home', patient_id=pid) }}">
+      <i class="bi bi-chat-dots-fill nav-icon"></i>
+      <span>AI Chat Assistant</span>
+      <span class="badge bg-primary ms-auto rounded-pill" style="font-size:9px">AI</span>
+    </a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link sidebar-link {% if active_page == 'prediction' %}active{% endif %}"
+       href="{{ url_for('prediction.prediction_page', patient_id=pid) }}">
+      <i class="bi bi-graph-up-arrow nav-icon text-purple"></i>
+      <span>AI Prediction</span>
+      <span class="badge bg-purple ms-auto rounded-pill" style="font-size:9px;background:#7c3aed!important">NEW</span>
+    </a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link sidebar-link {% if active_page == 'health_report' %}active{% endif %}"
+       href="{{ url_for('health_report.report_page', patient_id=pid) }}">
+      <i class="bi bi-file-earmark-text-fill nav-icon text-primary"></i>
+      <span>AI Health Report</span>
+    </a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link sidebar-link {% if active_page == 'emergency' %}active{% endif %}"
+       href="{{ url_for('emergency.emergency_dashboard', patient_id=pid) }}">
+      <i class="bi bi-exclamation-octagon-fill nav-icon text-danger"></i>
+      <span>Emergency Alerts</span>
+    </a>
+  </li>
+
+  <li class="nav-section-label px-3 py-1 mt-2">
+    <small class="text-uppercase text-muted fw-semibold" style="font-size:10px;letter-spacing:.08em">Tracking</small>
+  </li>
+
+  <li class="nav-item">
+    <a class="nav-link sidebar-link {% if active_page == 'timeline' %}active{% endif %}"
+       href="{{ url_for('timeline.timeline_page', patient_id=pid) }}">
+      <i class="bi bi-clock-history nav-icon text-info"></i>
+      <span>Health Timeline</span>
+    </a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link sidebar-link {% if active_page == 'goals' %}active{% endif %}"
+       href="{{ url_for('goals.goals_page', patient_id=pid) }}">
+      <i class="bi bi-trophy-fill nav-icon text-warning"></i>
+      <span>Health Goals</span>
+    </a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link sidebar-link {% if active_page == 'reports' %}active{% endif %}"
+       href="{{ url_for('reports.reports_home', patient_id=pid) }}">
+      <i class="bi bi-file-earmark-medical-fill nav-icon"></i>
+      <span>Reports</span>
+    </a>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link sidebar-link"
+       href="{{ url_for('health_data.history', patient_id=pid) }}">
+      <i class="bi bi-table nav-icon"></i>
+      <span>Data History</span>
+    </a>
+  </li>
+  {% endif %}
+
+  <li class="nav-section-label px-3 py-1 mt-2">
+    <small class="text-uppercase text-muted fw-semibold" style="font-size:10px;letter-spacing:.08em">Manage</small>
+  </li>
+  <li class="nav-item">
+    <a class="nav-link sidebar-link" href="{{ url_for('patients.create') }}">
+      <i class="bi bi-person-plus-fill nav-icon"></i>
+      <span>Add Patient</span>
+    </a>
+  </li>
+
+</ul>

@@ -1,0 +1,260 @@
+/* ================================================================
+   ChronicCare AI — Extended UI Enhancements
+   Features 1-6: Animations, skeleton loaders, glassmorphism,
+   progress rings, timeline, goals, emergency alerts
+   ================================================================ */
+
+/* ================================================================
+   SKELETON LOADING SCREENS
+   ================================================================ */
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+  border-radius: 6px;
+}
+[data-bs-theme="dark"] .skeleton {
+  background: linear-gradient(90deg, #21262d 25%, #30363d 50%, #21262d 75%);
+  background-size: 200% 100%;
+}
+.skeleton-text  { height: 14px; display: block; }
+.skeleton-title { height: 22px; display: block; }
+.skeleton-card  { height: 160px; width: 100%; display: block; }
+.skeleton-circle { border-radius: 50%; }
+
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ================================================================
+   ANIMATED COUNTERS
+   ================================================================ */
+.counter-value {
+  display: inline-block;
+  transition: all .4s ease-out;
+}
+
+/* ================================================================
+   GLASSMORPHISM CARDS
+   ================================================================ */
+.card-glass-dark {
+  background: rgba(13, 17, 23, .75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(48, 54, 61, .60) !important;
+}
+.card-glass-blue {
+  background: rgba(26, 86, 219, .08);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(26, 86, 219, .18) !important;
+}
+.card-glow-danger { box-shadow: 0 0 0 3px rgba(220,38,38,.15) !important; }
+.card-glow-warning { box-shadow: 0 0 0 3px rgba(217,119,6,.15) !important; }
+.card-glow-success { box-shadow: 0 0 0 3px rgba(5,150,105,.15) !important; }
+
+/* ================================================================
+   HOVER ANIMATIONS
+   ================================================================ */
+.hover-lift {
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0,0,0,.10) !important;
+}
+.hover-scale {
+  transition: transform .15s ease;
+}
+.hover-scale:hover { transform: scale(1.03); }
+
+/* ================================================================
+   FLOATING AI ASSISTANT BUTTON
+   ================================================================ */
+.fab-ai {
+  position: fixed;
+  bottom: 28px; right: 28px;
+  width: 56px; height: 56px;
+  background: linear-gradient(135deg, var(--cc-primary), var(--cc-secondary));
+  border-radius: 50%;
+  border: none;
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-size: 22px;
+  box-shadow: 0 4px 16px rgba(26,86,219,.45);
+  cursor: pointer; z-index: 1050;
+  transition: transform .2s, box-shadow .2s;
+  animation: float 3s ease-in-out infinite;
+}
+.fab-ai:hover {
+  transform: scale(1.12);
+  box-shadow: 0 6px 24px rgba(26,86,219,.60);
+}
+.fab-ai .fab-tooltip {
+  position: absolute; right: 68px; white-space: nowrap;
+  background: rgba(15,23,42,.90); color: white;
+  font-size: 12px; padding: 6px 12px; border-radius: 8px;
+  opacity: 0; pointer-events: none;
+  transition: opacity .2s;
+}
+.fab-ai:hover .fab-tooltip { opacity: 1; }
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-6px); }
+}
+
+/* ================================================================
+   BEAUTIFUL NOTIFICATIONS (Toast)
+   ================================================================ */
+.toast-container .toast {
+  border-radius: 10px !important;
+  font-size: 13px;
+  box-shadow: 0 4px 16px rgba(0,0,0,.15) !important;
+  border: none !important;
+}
+
+/* ================================================================
+   PREDICTION PERIOD CARDS
+   ================================================================ */
+.prediction-period {
+  transition: transform .15s, box-shadow .15s;
+  cursor: pointer;
+}
+.prediction-period:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+}
+
+/* ================================================================
+   RISK DONUT WRAPPER
+   ================================================================ */
+.risk-donut-wrapper {
+  position: relative;
+  width: 180px; height: 180px;
+  display: flex; align-items: center; justify-content: center;
+}
+.risk-donut-wrapper canvas { position: absolute; top:0; left:0; }
+.risk-donut-center { position: relative; z-index: 2; text-align: center; }
+
+/* ================================================================
+   EMERGENCY ALERT CARDS
+   ================================================================ */
+.emergency-alert-card {
+  transition: all .2s;
+  animation: fadeSlideIn .3s ease-out;
+}
+.emergency-alert-card:hover { transform: translateX(4px); }
+
+/* Color-coded severity borders */
+.severity-green    { border-left: 4px solid #059669 !important; }
+.severity-yellow   { border-left: 4px solid #d97706 !important; }
+.severity-orange   { border-left: 4px solid #ea580c !important; }
+.severity-red      { border-left: 4px solid #dc2626 !important; }
+.severity-critical { border-left: 4px solid #7f1d1d !important; background: rgba(127,29,29,.05) !important; }
+
+/* ================================================================
+   HEALTH TIMELINE
+   ================================================================ */
+.timeline-date-badge {
+  background: var(--cc-primary);
+  color: white; padding: 4px 14px;
+  border-radius: 20px; font-size: 12px; white-space: nowrap;
+  font-weight: 600;
+}
+.timeline-line {
+  height: 1px; background: var(--border-color);
+}
+.timeline-item { animation: fadeSlideIn .3s ease-out both; }
+.timeline-event-card {
+  transition: transform .15s;
+}
+.timeline-event-card:hover { transform: translateX(4px); }
+
+/* ================================================================
+   HEALTH GOALS
+   ================================================================ */
+.goal-card { transition: transform .2s, box-shadow .2s; }
+.goal-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0,0,0,.10) !important;
+}
+.goal-icon {
+  width: 52px; height: 52px;
+  display: flex; align-items: center; justify-content: center;
+}
+.goal-type-btn { border-radius: 10px !important; transition: all .15s; }
+.goal-type-btn:hover { transform: scale(1.04); }
+.btn-check:checked + .goal-type-btn {
+  border-color: var(--cc-primary) !important;
+  background: rgba(26,86,219,.10) !important;
+  color: var(--cc-primary) !important;
+}
+
+/* Progress ring container */
+.progress-ring-container {
+  position: relative;
+  width: 70px; height: 70px;
+  display: flex; align-items: center; justify-content: center;
+}
+.progress-ring-label {
+  position: absolute; font-size: 14px; font-weight: 700;
+  color: var(--text-primary);
+}
+
+/* Coaching / motivation boxes */
+.coaching-tip    { border-left: 3px solid var(--cc-primary); }
+.motivational    { border-left: 3px solid var(--cc-success); font-style: italic; }
+
+/* ================================================================
+   EXPLAIN AI BUTTON (everywhere)
+   ================================================================ */
+.explain-btn {
+  border-style: dashed !important;
+  font-size: 12px !important;
+}
+.explain-btn:hover {
+  background: rgba(14,165,233,.08) !important;
+  border-style: solid !important;
+}
+
+/* ================================================================
+   ANIMATED PROGRESS BARS
+   ================================================================ */
+.progress-bar-animated {
+  animation: progressGrow 1.2s ease-out forwards;
+}
+@keyframes progressGrow {
+  from { width: 0 !important; }
+}
+
+/* ================================================================
+   ANIMATE-IN CLASS (Timeline items)
+   ================================================================ */
+.animate-in {
+  animation: fadeSlideIn .4s ease-out both;
+}
+
+/* ================================================================
+   DASHBOARD — "Generate Report" Quick Button
+   ================================================================ */
+.dashboard-quick-actions .btn { font-size: 12px; }
+
+/* ================================================================
+   MOBILE RESPONSIVE ADDITIONS
+   ================================================================ */
+@media (max-width: 575.98px) {
+  .fab-ai { bottom: 20px; right: 16px; width: 48px; height: 48px; font-size: 18px; }
+  .risk-donut-wrapper { width: 140px; height: 140px; }
+  .prediction-period { padding: .75rem .5rem; }
+}
+
+/* ================================================================
+   PRINT ENHANCEMENTS
+   ================================================================ */
+@media print {
+  .fab-ai, .btn, .modal, .sidebar, .mobile-nav,
+  .content-header, .card-footer { display: none !important; }
+  .ai-response-body { font-size: 11px; }
+  .card { box-shadow: none !important; border: 1px solid #ddd !important; page-break-inside: avoid; }
+}
