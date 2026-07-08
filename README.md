@@ -77,18 +77,32 @@ Chronic diseases — including Diabetes, Hypertension, Heart Disease, Obesity, a
 ## Screenshots
 
 > **Dashboard** — Patient vitals, risk meter, health score, Chart.js visualizations
+<img width="959" height="539" alt="3i" src="https://github.com/user-attachments/assets/b279afd3-7d59-4acd-95ed-a531248713e3" />
+
 
 > **AI Health Report** — 18-section IBM Granite generated clinical report
+<img width="959" height="539" alt="10i" src="https://github.com/user-attachments/assets/801fa905-2c54-4eaa-ac24-650de8520dce" />
+
 
 > **Predictive Progression** — 7/30/90-day disease forecast with risk donut
+<img width="959" height="539" alt="28i" src="https://github.com/user-attachments/assets/c5ed72c7-516d-4c7a-ade2-1cdd9bf44ce7" />
+
 
 > **Emergency Alerts** — Color-coded real-time alert dashboard
+<img width="959" height="539" alt="15i" src="https://github.com/user-attachments/assets/2705c2a4-48d1-4aa9-ab3f-33bfc0dcc1b0" />
+
 
 > **Health Timeline** — Chronological health event cards
+<img width="959" height="539" alt="16i" src="https://github.com/user-attachments/assets/204f24f4-3e84-48ba-8a07-26bce44000a7" />
+
 
 > **Health Goals** — Progress rings, AI coaching, achievement badges
+<img width="959" height="539" alt="18i" src="https://github.com/user-attachments/assets/55403f6f-1361-471b-8f39-c5d1526d46ab" />
+
 
 > **CareBot Chat** — Conversational IBM Granite health assistant
+<img width="959" height="539" alt="6i" src="https://github.com/user-attachments/assets/35569697-ab4d-4c1c-929e-905f15a20a97" />
+
 
 ---
 
