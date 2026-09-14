@@ -77,18 +77,27 @@ class WatsonxService:
 
         try:
             token = self._get_access_token()
-            endpoint = f"{self.url}/ml/v1/text/generation?version=2023-05-29"
+            endpoint = f"{self.url}/ml/v1/text/chat?version=2025-10-25"
 
-            full_prompt = self._build_prompt(system_prompt, prompt)
-            params = dict(self.parameters)
-            if max_tokens:
-                params["max_new_tokens"] = max_tokens
+            messages = []
+
+            if system_prompt:
+                messages.append({
+                    "role": "system",
+                    "content": system_prompt
+                })
+
+            messages.append({
+                "role": "user",
+                "content": prompt
+            })
 
             payload = {
                 "model_id": self.model_id,
-                "input": full_prompt,
-                "parameters": params,
                 "project_id": self.project_id,
+                "messages": messages,
+                "max_completion_tokens": max_tokens or self.parameters.get("max_new_tokens", 1024),
+                "temperature": self.parameters.get("temperature", 0.7)
             }
 
             response = requests.post(
@@ -100,9 +109,17 @@ class WatsonxService:
                 json=payload,
                 timeout=60,
             )
+
             response.raise_for_status()
+
             result = response.json()
-            generated = result.get("results", [{}])[0].get("generated_text", "")
+
+            generated = (
+                result.get("choices", [{}])[0]
+                .get("message", {})
+                .get("content", "")
+            )
+
             return generated.strip()
 
         except Exception as e:
@@ -124,40 +141,33 @@ class WatsonxService:
     # ----------------------------------------------------------
     def chat(self, messages: list, system_prompt: str = "") -> str:
         """
-        Multi-turn chat with conversation history.
+        Send a chat conversation to IBM Granite model and return the response.
 
         Args:
-            messages: List of {"role": "user"/"assistant", "content": "..."}
-            system_prompt: System instruction
+            messages: List of chat messages with role and content.
 
         Returns:
-            Assistant response string
+            Generated text string
         """
-        prompt_parts = []
-        if system_prompt:
-            prompt_parts.append(f"<|system|>\n{system_prompt}\n")
-
-        for msg in messages:
-            role = msg.get("role", "user")
-            content = msg.get("content", "")
-            tag = "<|user|>" if role == "user" else "<|assistant|>"
-            prompt_parts.append(f"{tag}\n{content}\n")
-
-        prompt_parts.append("<|assistant|>\n")
-        full_prompt = "".join(prompt_parts)
-
         if not self.api_key or not self.project_id:
-            return self._demo_chat_response(messages[-1]["content"] if messages else "")
+            return self._demo_chat_response(
+                messages[-1]["content"] if messages else ""
+            )
 
         try:
             token = self._get_access_token()
-            endpoint = f"{self.url}/ml/v1/text/generation?version=2023-05-29"
+            endpoint = f"{self.url}/ml/v1/text/chat?version=2025-10-25"
+
             payload = {
                 "model_id": self.model_id,
-                "input": full_prompt,
-                "parameters": self.parameters,
                 "project_id": self.project_id,
+                "messages": messages,
+                "max_completion_tokens": self.parameters.get(
+                    "max_new_tokens", 1024
+                ),
+                "temperature": self.parameters.get("temperature", 0.7)
             }
+
             response = requests.post(
                 endpoint,
                 headers={
@@ -167,12 +177,23 @@ class WatsonxService:
                 json=payload,
                 timeout=60,
             )
+
             response.raise_for_status()
+
             result = response.json()
-            return result.get("results", [{}])[0].get("generated_text", "").strip()
+
+            return (
+                result.get("choices", [{}])[0]
+                .get("message", {})
+                .get("content", "")
+                .strip()
+            )
+
         except Exception as e:
             logger.error(f"watsonx chat error: {e}")
-            return self._demo_chat_response(messages[-1]["content"] if messages else "")
+            return self._demo_chat_response(
+                messages[-1]["content"] if messages else ""
+            )
 
     # ----------------------------------------------------------
     # Demo mode (when API keys not configured)
